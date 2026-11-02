@@ -3,7 +3,7 @@
 // ============================================================
 import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-
+import API_URL from '../api'
 export default function Profile() {
   const { user, getAuthHeaders, updateUser } = useAuth()
 
@@ -56,7 +56,7 @@ export default function Profile() {
     setProfileMsg({ type: '', text: '' })
 
     try {
-      const res  = await fetch('/api/auth/profile', {
+        const res = await fetch(`${API_URL}/api/auth/profile`, {
         method:  'PUT',
         headers: getAuthHeaders(),
         body:    JSON.stringify(profileForm),
@@ -103,7 +103,7 @@ export default function Profile() {
     setPwdMsg({ type: '', text: '' })
 
     try {
-      const res  = await fetch('/api/auth/password', {
+        const res = await fetch(`${API_URL}/api/auth/password`, {
         method:  'PUT',
         headers: getAuthHeaders(),
         body:    JSON.stringify({

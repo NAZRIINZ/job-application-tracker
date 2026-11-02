@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { LoadingSpinner } from '../components/Layout'
 import { StatusBadge } from '../components/Layout'
+import API_URL from '../api'
 
 // Format a date string nicely for display
 function formatDate(dateStr) {
@@ -28,7 +29,7 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const res  = await fetch('/api/jobs/stats', { headers: getAuthHeaders() })
+          const res = await fetch(`${API_URL}/api/jobs/stats`, { headers: getAuthHeaders() })
         const data = await res.json()
         if (data.success) {
           setStats(data.data)

@@ -11,6 +11,7 @@
 // ============================================================
 
 import React, { createContext, useState, useEffect, useContext } from 'react'
+import API_URL from '../api'
 
 // Step 1: Create the Context object
 const AuthContext = createContext(null)
@@ -31,7 +32,7 @@ export function AuthProvider({ children }) {
 
     if (token) {
       // Verify the token is still valid by calling /api/auth/me
-      fetch('/api/auth/me', {
+        fetch(`${API_URL}/api/auth/me`, { 
         headers: {
           // JWT tokens are sent in the Authorization header
           'Authorization': `Bearer ${token}`

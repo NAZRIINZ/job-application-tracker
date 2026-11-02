@@ -42,13 +42,16 @@ const app = express();
 // CORS - Cross-Origin Resource Sharing
 // By default, browsers block requests from one domain (localhost:5173)
 // to another domain (localhost:5000). CORS allows this.
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:4173',
+    process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(cors({
-  origin: [
-    'http://localhost:5173',  // Vite dev server
-    'http://localhost:3000',  // Alternative React dev server
-    'http://localhost:4173',  // Vite preview
-  ],
-  credentials: true,          // Allow cookies/auth headers
+    origin: allowedOrigins,
+    credentials: true,
 }));
 
 // JSON Parser - allows us to read req.body as a JavaScript object

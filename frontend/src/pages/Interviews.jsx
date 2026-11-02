@@ -3,7 +3,9 @@
 // ============================================================
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import API_URL from '../api'
 import { LoadingSpinner, ConfirmModal, StatusBadge } from '../components/Layout'
+
 
 const INTERVIEW_TYPES  = ['Phone Screen', 'Technical', 'HR Round', 'Final Round', 'On-site', 'Video Call', 'Other']
 const INTERVIEW_RESULTS = ['Scheduled', 'Completed', 'Passed', 'Failed', 'Cancelled']
@@ -68,8 +70,8 @@ export default function Interviews() {
     try {
       // Fetch interviews and jobs in parallel
       const [intRes, jobRes] = await Promise.all([
-        fetch('/api/interviews', { headers: getAuthHeaders() }),
-        fetch('/api/jobs?limit=100', { headers: getAuthHeaders() }),
+          fetch(`${API_URL}/api/interviews`, { headers: getAuthHeaders() }),
+          fetch(`${API_URL}/api/jobs?limit=100`, { headers: getAuthHeaders() })
       ])
       const [intData, jobData] = await Promise.all([intRes.json(), jobRes.json()])
 
@@ -130,8 +132,11 @@ export default function Interviews() {
     setFormError('')
 
     try {
-      const url    = editMode ? `/api/interviews/${editId}` : '/api/interviews'
-      const method = editMode ? 'PUT' : 'POST'
+        const url = editMode
+            ? `${API_URL}/api/interviews/${editId}`
+            : `${API_URL}/api/interviews`
+
+        const method = editMode ? 'PUT' : 'POST'
 
       const res  = await fetch(url, {
         method,
@@ -156,7 +161,7 @@ export default function Interviews() {
   async function handleDelete() {
     setDeleting(true)
     try {
-      const res  = await fetch(`/api/interviews/${deleteModal.id}`, {
+        const res = await fetch(`${API_URL}/api/interviews/${deleteModal.id}`, {
         method:  'DELETE',
         headers: getAuthHeaders(),
       })

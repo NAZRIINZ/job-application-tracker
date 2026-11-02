@@ -4,6 +4,7 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import API_URL from '../api'
 
 const STATUS_OPTIONS = ['Wishlist', 'Applied', 'Interview', 'Offer Received', 'Rejected']
 
@@ -62,7 +63,7 @@ export default function AddJob() {
     setSuccess('')
 
     try {
-      const res  = await fetch('/api/jobs', {
+        const res = await fetch(`${API_URL}/api/jobs`, {
         method:  'POST',
         headers: getAuthHeaders(),
         body:    JSON.stringify(form),

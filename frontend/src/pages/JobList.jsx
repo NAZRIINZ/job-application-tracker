@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import API_URL from '../api'
 import { StatusBadge, LoadingSpinner, ConfirmModal } from '../components/Layout'
 
 const STATUS_OPTIONS = ['', 'Wishlist', 'Applied', 'Interview', 'Offer Received', 'Rejected']
@@ -42,7 +43,8 @@ export default function JobList() {
       if (search) params.set('search', search)
       if (status) params.set('status', status)
 
-      const res  = await fetch(`/api/jobs?${params}`, { headers: getAuthHeaders() })
+        
+        const res = await fetch(`${API_URL}/api/jobs?${params}`, { headers: getAuthHeaders() })
       const data = await res.json()
 
       if (data.success) {
@@ -85,7 +87,7 @@ export default function JobList() {
   async function handleDelete() {
     setDeleting(true)
     try {
-      const res  = await fetch(`/api/jobs/${deleteModal.jobId}`, {
+        const res = await fetch(`${API_URL}/api/jobs/${deleteModal.jobId}`, {
         method:  'DELETE',
         headers: getAuthHeaders()
       })

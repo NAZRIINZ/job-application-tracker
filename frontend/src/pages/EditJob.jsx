@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { LoadingSpinner } from '../components/Layout'
+import API_URL from '../api'
 
 const STATUS_OPTIONS = ['Wishlist', 'Applied', 'Interview', 'Offer Received', 'Rejected']
 
@@ -38,7 +39,7 @@ export default function EditJob() {
   useEffect(() => {
     async function fetchJob() {
       try {
-        const res  = await fetch(`/api/jobs/${id}`, { headers: getAuthHeaders() })
+       const res = await fetch(`${API_URL}/api/jobs/${id}`, { headers: getAuthHeaders() })
         const data = await res.json()
 
         if (data.success) {
@@ -93,7 +94,7 @@ export default function EditJob() {
     setSuccess('')
 
     try {
-      const res  = await fetch(`/api/jobs/${id}`, {
+      const res = await fetch(`${API_URL}/api/jobs/${id}`, {
         method:  'PUT',
         headers: getAuthHeaders(),
         body:    JSON.stringify(form),

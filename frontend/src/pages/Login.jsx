@@ -4,6 +4,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import API_URL from '../api'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -47,7 +48,7 @@ export default function Login() {
 
     try {
       // Send POST request to the backend
-      const response = await fetch('/api/auth/login', {
+        const response = await fetch(`${API_URL}/api/auth/login`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(form),
