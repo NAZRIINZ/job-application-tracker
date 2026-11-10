@@ -26,24 +26,38 @@ export default function Dashboard() {
   const [error,   setError]   = useState('')
 
   // Fetch stats when component mounts
-  useEffect(() => {
-    async function fetchStats() {
-      try {
-          const res = await fetch(`${API_URL}/api/jobs/stats`, { headers: getAuthHeaders() })
-        const data = await res.json()
-        if (data.success) {
-          setStats(data.data)
-        } else {
-          setError('Failed to load dashboard data.')
+    useEffect(() => {
+        async function fetchStats() {
+            try {
+                const res = await fetch(`${API_URL}/api/jobs/stats`, {
+                    headers: getAuthHeaders(),
+                })
+
+                const data = await res.json()
+
+                // Check the actual backend response
+                console.log('Dashboard API Status:', res.status)
+                console.log('Dashboard API Response:', data)
+
+                if (!res.ok) {
+                    throw new Error(data.message || `Server error: ${res.status}`)
+                }
+
+                if (data.success && data.data) {
+                    setStats(data.data)
+                } else {
+                    setError(data.message || 'Dashboard statistics were not returned by the server.')
+                }
+            } catch (err) {
+                console.error('Dashboard Error:', err)
+                setError(err.message || 'Cannot connect to server.')
+            } finally {
+                setLoading(false)
+            }
         }
-      } catch {
-        setError('Cannot connect to server.')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchStats()
-  }, [])
+
+        fetchStats()
+    }, [])
 
   if (loading) return <LoadingSpinner text="Loading dashboard..." />
 
