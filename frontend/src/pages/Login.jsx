@@ -135,14 +135,14 @@ export default function Login() {
         </form>
 
         {/* Demo credentials hint */}
-        <div className="alert alert-info mt-16" style={{ fontSize: '0.8rem' }}>
+        {/* <div className="alert alert-info mt-16" style={{ fontSize: '0.8rem' }}>
           <div>
             <strong>Demo Login:</strong><br />
             Email: test@example.com<br />
             Password: password123
           </div>
         </div>
-
+             */}
         <div className="auth-footer">
           Don't have an account?{' '}
           <Link to="/register">Create one free →</Link>
