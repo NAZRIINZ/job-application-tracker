@@ -158,6 +158,21 @@ async function createJob(req, res) {
 
     const pool = getPool();
 
+    // ── Debug: verify the logged-in user actually exists in the DB ──
+    // This catches stale JWT tokens from before a DB reset
+    const [userCheck] = await pool.execute(
+      'SELECT id FROM Users WHERE id = ?',
+      [req.user.id]
+    );
+    console.log('CreateJob → user_id from JWT:', req.user.id, '→ found in DB:', userCheck.length > 0);
+
+    if (userCheck.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Your session is invalid — your account was not found. Please log out and register or log in again.',
+      });
+    }
+
     // Insert new application into database
     const [result] = await pool.execute(
       `INSERT INTO JobApplications
@@ -194,8 +209,22 @@ async function createJob(req, res) {
     });
 
   } catch (err) {
-    console.error('CreateJob error:', err.message);
-    res.status(500).json({ success: false, message: 'Failed to create job.' });
+    // Log the full real error to backend console (visible in Render logs)
+    console.error('CreateJob error code:', err.code);
+    console.error('CreateJob error msg :', err.message);
+    console.error('CreateJob error sql :', err.sql);
+
+    // Return the real DB error message so we can debug it in the browser
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create job.',
+      // Show real error details (remove this in production after debugging)
+      debug: {
+        code:    err.code    || 'UNKNOWN',
+        detail:  err.message || 'No message',
+        sqlMsg:  err.sqlMessage || null,
+      },
+    });
   }
 }
 

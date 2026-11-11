@@ -75,7 +75,11 @@ export default function AddJob() {
         // Redirect to job list after a short delay
         setTimeout(() => navigate('/jobs'), 1200)
       } else {
-        setApiError(data.message || 'Failed to add job.')
+        // Show real error including debug info if present
+        const debugInfo = data.debug
+          ? ` [${data.debug.code}: ${data.debug.sqlMsg || data.debug.detail}]`
+          : ''
+        setApiError((data.message || 'Failed to add job.') + debugInfo)
       }
     } catch {
       setApiError('Cannot connect to server.')

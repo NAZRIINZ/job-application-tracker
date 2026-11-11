@@ -16,6 +16,10 @@ const mysql = require('mysql2/promise');
 // ---------------------------------------------------------------
 // Read database configuration from environment variables
 // ---------------------------------------------------------------
+// SSL is required for cloud-hosted MySQL (e.g. Aiven, PlanetScale, AWS RDS).
+// DB_SSL=true in .env enables SSL. For local MySQL, leave DB_SSL unset or false.
+const useSSL = process.env.DB_SSL === 'true';
+
 const dbConfig = {
   host:               process.env.DB_HOST     || 'localhost',
   port:               parseInt(process.env.DB_PORT, 10) || 3306,
@@ -25,6 +29,17 @@ const dbConfig = {
   waitForConnections: true,
   connectionLimit:    10,
   queueLimit:         0,
+  connectTimeout:     30000,          // 30s — prevents hanging on slow cloud DB
+  // Keep connections alive so the pool doesn't use stale closed connections
+  // (important on Render free tier which sleeps between requests)
+  enableKeepAlive:    true,
+  keepAliveInitialDelay: 10000,       // Send keep-alive ping every 10s
+  // SSL: required by Aiven, AWS RDS, PlanetScale, and most cloud MySQL providers
+  ...(useSSL && {
+    ssl: {
+      rejectUnauthorized: false,      // Works without downloading the CA cert file
+    },
+  }),
 };
 
 // ---------------------------------------------------------------

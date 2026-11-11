@@ -91,6 +91,33 @@ app.get('/', (req, res) => {
   });
 });
 
+// ── DEBUG: Check what tables exist and what users are registered ──
+// Visit: https://your-render-backend.onrender.com/api/debug/tables
+app.get('/api/debug/tables', async (req, res) => {
+  try {
+    const { getPool } = require('./config/db');
+    const pool = getPool();
+    const [tables]  = await pool.execute('SHOW TABLES');
+    const tableList = tables.map(r => Object.values(r)[0]);
+
+    // Show all users (id + email only — no passwords!)
+    const [users] = await pool.execute('SELECT id, name, email, created_at FROM Users');
+
+    // Show table_names case-sensitivity setting
+    const [caseVar] = await pool.execute("SHOW VARIABLES LIKE 'lower_case_table_names'");
+
+    res.json({
+      success: true,
+      database: process.env.DB_DATABASE,
+      tables: tableList,
+      users: users,
+      lower_case_table_names: caseVar[0]?.Value || 'unknown',
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message, code: err.code });
+  }
+});
+
 // 404 handler - runs when no route matches the request URL
 app.use((req, res) => {
   res.status(404).json({
