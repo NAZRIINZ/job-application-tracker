@@ -1,14 +1,14 @@
 // ============================================================
 // auth.js (routes) - Authentication Routes
 // ============================================================
-// Routes map HTTP methods + URLs to controller functions.
-// Think of them as the "menu" of what your API can do.
-// ============================================================
 
+// Import Express
 const express = require('express');
+// Create a router to manage authentication routes
 const router  = express.Router();
-
+// Import authentication middleware
 const authMiddleware = require('../middleware/auth');
+// Import authentication functions from the controller
 const {
   register,
   login,
@@ -20,7 +20,7 @@ const {
 // POST /api/auth/register - Create new account (no auth required)
 router.post('/register', register);
 
-// POST /api/auth/login - Login and get token (no auth required)
+// POST /api/auth/login - Login an existing user (no auth required)
 router.post('/login', login);
 
 // GET /api/auth/me - Get current user (auth required)
@@ -31,5 +31,5 @@ router.put('/profile', authMiddleware, updateProfile);
 
 // PUT /api/auth/password - Change password (auth required)
 router.put('/password', authMiddleware, changePassword);
-
+// Export the router so server.js can use it
 module.exports = router;

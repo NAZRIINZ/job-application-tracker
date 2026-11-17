@@ -1,25 +1,19 @@
 // ============================================================
 // db.js - MySQL Database Connection Configuration
 // ============================================================
-// Connects to MySQL using the 'mysql2/promise' package.
-// Uses a connection pool for efficient reuse of database connections.
-//
-// Supports:
-//   - Local MySQL Server (MySQL Community Server, MySQL Workbench, XAMPP)
-//   - Remote / Cloud MySQL (AWS RDS MySQL, DigitalOcean, etc.)
+
 // ============================================================
-
+//Load environment variables
 require('dotenv').config();
-
+//Import MySQL package
 const mysql = require('mysql2/promise');
 
 // ---------------------------------------------------------------
-// Read database configuration from environment variables
+// Check SSL configuration (secure communication between the backend and cloud database)
 // ---------------------------------------------------------------
-// SSL is required for cloud-hosted MySQL (e.g. Aiven, PlanetScale, AWS RDS).
-// DB_SSL=true in .env enables SSL. For local MySQL, leave DB_SSL unset or false.
-const useSSL = process.env.DB_SSL === 'true';
 
+const useSSL = process.env.DB_SSL === 'true';
+//Create database configuration
 const dbConfig = {
   host:               process.env.DB_HOST     || 'localhost',
   port:               parseInt(process.env.DB_PORT, 10) || 3306,
@@ -43,7 +37,7 @@ const dbConfig = {
 };
 
 // ---------------------------------------------------------------
-// Log connection details on startup (helps debugging)
+// Display database details in the terminal.
 // ---------------------------------------------------------------
 console.log('\n🔌 Attempting MySQL connection...');
 console.log(`   Host:     ${dbConfig.host}`);
@@ -52,10 +46,10 @@ console.log(`   Database: ${dbConfig.database}`);
 console.log(`   User:     ${dbConfig.user}`);
 
 // ---------------------------------------------------------------
-// Global connection pool
+// Create connection pool
 // ---------------------------------------------------------------
 let pool = null;
-
+//Create connectDB() function
 async function connectDB() {
   try {
     // Create the connection pool using mysql2/promise
@@ -70,11 +64,11 @@ async function connectDB() {
   } catch (err) {
     console.error('\n❌ MySQL connection failed!');
     console.error(`   Error: ${err.message}\n`);
-
+    //Handle different database errors
     const msg = err.message.toLowerCase();
     const code = err.code || '';
 
-    // Context-specific troubleshooting tips for beginners
+      // This checks which type of error occurred
     if (code === 'ER_ACCESS_DENIED_ERROR' || msg.includes('access denied')) {
       console.error('📌 FIX — Access denied (wrong username or password):');
       console.error('   1. Check DB_USER and DB_PASSWORD in your backend/.env file');
@@ -96,12 +90,12 @@ async function connectDB() {
     process.exit(1);
   }
 }
-
+//Create getPool() function
 function getPool() {
   if (!pool) {
     throw new Error('Database not connected. Call connectDB() first.');
   }
   return pool;
 }
-
+//allow route files to import functions 
 module.exports = { connectDB, getPool };

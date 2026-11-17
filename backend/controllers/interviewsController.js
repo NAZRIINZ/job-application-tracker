@@ -6,6 +6,7 @@
 
 const { getPool } = require('../config/db');
 
+// List of allowed interview types and results
 const VALID_TYPES   = ['Phone Screen', 'Technical', 'HR Round', 'Final Round', 'On-site', 'Video Call', 'Other'];
 const VALID_RESULTS = ['Scheduled', 'Completed', 'Passed', 'Failed', 'Cancelled'];
 
@@ -185,9 +186,10 @@ async function updateInterview(req, res) {
 // DELETE INTERVIEW - DELETE /api/interviews/:id
 // ============================================================
 async function deleteInterview(req, res) {
-  try {
+    try {
+        // Get interview ID from the URL
     const interviewId = parseInt(req.params.id, 10);
-
+        //isNaN() checks whether the ID is not a valid number.
     if (isNaN(interviewId)) {
       return res.status(400).json({ success: false, message: 'Invalid interview ID.' });
     }

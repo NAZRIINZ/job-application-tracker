@@ -1,10 +1,11 @@
 // ============================================================
 // jobs.js (routes) - Job Application Routes
 // ============================================================
-
+// Import Express
 const express = require('express');
+// Create a router to manage job application routes
 const router  = express.Router();
-
+// Import authentication middleware
 const authMiddleware = require('../middleware/auth');
 const {
   getJobs,
@@ -15,15 +16,11 @@ const {
   getStats,
 } = require('../controllers/jobsController');
 
-// All job routes require authentication
-// We apply authMiddleware to each route individually
-
-// GET  /api/jobs/stats - Dashboard statistics
-// IMPORTANT: This must come BEFORE /api/jobs/:id
-// otherwise Express will try to treat "stats" as an ID
+// Get dashboard statistics
+// This route must come before /:id
 router.get('/stats', authMiddleware, getStats);
 
-// GET    /api/jobs      - Get all jobs (with search/filter/pagination)
+// GET    /api/jobs      - Get all jobs 
 // POST   /api/jobs      - Create new job
 router.get('/',    authMiddleware, getJobs);
 router.post('/',   authMiddleware, createJob);
