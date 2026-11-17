@@ -1,25 +1,17 @@
-// ============================================================
-// AuthContext.jsx - Global Authentication State
-// ============================================================
-// React Context lets you share data (like the logged-in user)
-// across ALL components without "prop drilling" (passing props
-// down through many component levels).
-//
-// How it works:
-// 1. AuthProvider wraps the whole app
-// 2. Any component can call useAuth() to get the user & functions
-// ============================================================
 
+// AuthContext.jsx - Manages login and logout information
+// Shares user authentication details across the application.
 import React, { createContext, useState, useEffect, useContext } from 'react'
 import API_URL from '../api'
 
-// Step 1: Create the Context object
+// Step 1:  Create a context to share authentication information.
 const AuthContext = createContext(null)
 
-// Step 2: Create the Provider component
-// This wraps the entire application and provides auth data
+// Step 2:  Provides user information to all components
+
 export function AuthProvider({ children }) {
-  // The logged-in user object (or null if not logged in)
+    // Store the logged-in user's details.
+    // Initially, the user is null (not logged in).
   const [user, setUser] = useState(null)
 
   // Whether we're still checking if the user is logged in
@@ -31,14 +23,15 @@ export function AuthProvider({ children }) {
     const token = localStorage.getItem('token')
 
     if (token) {
-      // Verify the token is still valid by calling /api/auth/me
+      // Verify the token is still valid 
         fetch(`${API_URL}/api/auth/me`, { 
         headers: {
           // JWT tokens are sent in the Authorization header
           'Authorization': `Bearer ${token}`
         }
       })
-        .then(res => res.json())
+            .then(res => res.json())
+            // Receives the response from the backend.
         .then(data => {
           if (data.success) {
             setUser(data.user)
@@ -61,26 +54,25 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  // LOGIN function - called after successful login
-  // Saves token to localStorage and sets the user state
+    // LOGIN function - Saves the token and user details after login
+
   function login(token, userData) {
     localStorage.setItem('token', token)
     setUser(userData)
   }
 
-  // LOGOUT function - removes token and clears user state
+    // LOGOUT function - Clears the login information
   function logout() {
     localStorage.removeItem('token')
     setUser(null)
   }
 
-  // UPDATE USER - called after profile update
+    // UPDATE USER - Updates the user information
   function updateUser(updatedData) {
     setUser(prev => ({ ...prev, ...updatedData }))
   }
 
-  // Helper function to get auth headers for fetch requests
-  // Usage: fetch('/api/jobs', { headers: getAuthHeaders() })
+    // GET AUTH HEADERS - Adds the token to API requests
   function getAuthHeaders() {
     const token = localStorage.getItem('token')
     return {
@@ -89,7 +81,7 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // The value object contains everything we want to share
+   // Stores all authentication information and functions.
   const value = {
     user,
     loading,
@@ -100,7 +92,7 @@ export function AuthProvider({ children }) {
     isAuthenticated: !!user,  // true if user is not null
   }
 
-  // Provide the value to all child components
+    // Makes authentication information available to child components.
   return (
     <AuthContext.Provider value={value}>
       {children}
@@ -108,9 +100,7 @@ export function AuthProvider({ children }) {
   )
 }
 
-// Step 3: Custom hook for easy consumption
-// Instead of: import AuthContext; useContext(AuthContext)
-// We do:      import useAuth; useAuth()
+// Step 3:useAuth - Allows components to access authentication details
 export function useAuth() {
   const context = useContext(AuthContext)
   if (!context) {

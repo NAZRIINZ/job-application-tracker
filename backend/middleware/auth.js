@@ -14,11 +14,12 @@
 //   router.get('/protected', authMiddleware, (req, res) => { ... })
 // ============================================================
 
+// Import JWT to verify login tokens
 const jwt = require('jsonwebtoken');
-
+// Check whether the user is logged in
 function authMiddleware(req, res, next) {
   // Step 1: Get the Authorization header from the request
-  // It should look like: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  
   const authHeader = req.headers['authorization'];
 
   // Step 2: Check if the header exists
@@ -29,10 +30,10 @@ function authMiddleware(req, res, next) {
     });
   }
 
-  // Step 3: Extract just the token part (remove "Bearer " prefix)
-  // Split on space: ["Bearer", "eyJhbGci..."] → take index [1]
+  // Step 3: Extract just the token part 
+  
   const token = authHeader.split(' ')[1];
-
+    // Check whether the token is available
   if (!token) {
     return res.status(401).json({
       success: false,
@@ -40,21 +41,19 @@ function authMiddleware(req, res, next) {
     });
   }
 
-  // Step 4: Verify the token using our secret key
+    // Step 4: Verify whether the token is valid
   try {
-    // jwt.verify() decodes the token and checks:
-    // - The signature is valid (wasn't tampered with)
-    // - The token hasn't expired
+   
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Step 5: Attach the decoded user data to the request
-    // Now any route handler can access req.user.id, req.user.email, etc.
+    // Step 5: Store the decoded user data to the request
+   
     req.user = decoded;
 
-    // Step 6: Call next() to pass control to the next middleware/route handler
+      // Step 6: Allow the request to continue
     next();
   } catch (err) {
-    // Token is invalid or expired
+    //Show a message if  Token is invalid or expired
     if (err.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
@@ -67,5 +66,6 @@ function authMiddleware(req, res, next) {
     });
   }
 }
+// Export the middleware to use in route files
 
 module.exports = authMiddleware;

@@ -14,8 +14,7 @@
 // 6. Starts listening for incoming requests on a port
 // ============================================================
 
-// Step 1: Load .env file variables into process.env
-// This MUST be the first line before anything else!
+// Step 1: Load environment variables
 require('dotenv').config();
 
 // Step 2: Import required packages
@@ -32,16 +31,8 @@ const interviewsRoutes = require('./routes/interviews');
 
 // Step 5: Create the Express application
 const app = express();
+// Configure CORS to allow requests from the frontend
 
-// ============================================================
-// MIDDLEWARE SETUP
-// Middleware runs on EVERY request before hitting your routes.
-// Think of it as a series of checkpoints a request passes through.
-// ============================================================
-
-// CORS - Cross-Origin Resource Sharing
-// By default, browsers block requests from one domain (localhost:5173)
-// to another domain (localhost:5000). CORS allows this.
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
@@ -54,31 +45,25 @@ app.use(cors({
     credentials: true,
 }));
 
-// JSON Parser - allows us to read req.body as a JavaScript object
-// Without this, req.body would be undefined!
+// Read JSON data sent from the frontend
 app.use(express.json());
 
-// URL-encoded form data parser (for standard HTML forms)
+// Read form data sent through HTML forms
 app.use(express.urlencoded({ extended: true }));
 
-// Request logger - prints every incoming request to the console
-// Useful for debugging during development
+// Log every incoming request with its time, method and URL
 app.use((req, res, next) => {
-  const timestamp = new Date().toISOString().slice(11, 19); // HH:MM:SS
+  const timestamp = new Date().toISOString().slice(11, 19); 
   console.log(`[${timestamp}] ${req.method} ${req.url}`);
-  next(); // Don't forget to call next()!
+  next(); 
 });
 
-// ============================================================
-// ROUTES
-// Map URL prefixes to route files.
-// Example: /api/auth/login → routes/auth.js → authController.login
-// ============================================================
+//// Connect the URL to the related route file
 app.use('/api/auth',       authRoutes);
 app.use('/api/jobs',       jobsRoutes);
 app.use('/api/interviews', interviewsRoutes);
 
-// Root route - just a health check
+// Check whether the backend server is running
 app.get('/', (req, res) => {
   res.json({
     message: '🚀 Job Tracker API is running!',
@@ -91,8 +76,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// ── DEBUG: Check what tables exist and what users are registered ──
-// Visit: https://your-render-backend.onrender.com/api/debug/tables
+// Check database tables and registered users
 app.get('/api/debug/tables', async (req, res) => {
   try {
     const { getPool } = require('./config/db');
@@ -100,12 +84,12 @@ app.get('/api/debug/tables', async (req, res) => {
     const [tables]  = await pool.execute('SHOW TABLES');
     const tableList = tables.map(r => Object.values(r)[0]);
 
-    // Show all users (id + email only — no passwords!)
+    // Show all users (id + email )
     const [users] = await pool.execute('SELECT id, name, email, created_at FROM Users');
 
     // Show table_names case-sensitivity setting
     const [caseVar] = await pool.execute("SHOW VARIABLES LIKE 'lower_case_table_names'");
-
+      // Send the database details as a response
     res.json({
       success: true,
       database: process.env.DB_DATABASE,
@@ -114,11 +98,12 @@ app.get('/api/debug/tables', async (req, res) => {
       lower_case_table_names: caseVar[0]?.Value || 'unknown',
     });
   } catch (err) {
+      // Send an error message if something goes wrong
     res.status(500).json({ success: false, error: err.message, code: err.code });
   }
 });
 
-// 404 handler - runs when no route matches the request URL
+// Show an error when the requested URL does not exist
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -126,11 +111,10 @@ app.use((req, res) => {
   });
 });
 
-// Global error handler - catches any unhandled errors
-// The 4-parameter signature (err, req, res, next) tells Express
-// this is an error handler, not a regular middleware.
+// Handle errors that occur in the server
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err.message);
+    console.error('Unhandled error:', err.message);
+    // Send an error response to the frontend
   res.status(500).json({
     success: false,
     message: 'An unexpected server error occurred.',
@@ -138,11 +122,12 @@ app.use((err, req, res, next) => {
 });
 
 // ============================================================
-// START THE SERVER
+// START THE BACKEND SERVER
 // ============================================================
+// Get the port number from the environment file
 const PORT = process.env.PORT || 5000;
 
-// We wrap the startup in an async function because connectDB() is async
+// Connect to the database and start the server
 async function startServer() {
   try {
     // Connect to database first
@@ -157,12 +142,11 @@ async function startServer() {
     });
 
   } catch (err) {
-    // connectDB() already logs the error and calls process.exit(1)
-    // so this catch block handles any other startup errors
+      // Display an error if the server fails to start
     console.error('Failed to start server:', err.message);
     process.exit(1);
   }
 }
 
-// Call the startup function
+// Run the function to start the server
 startServer();

@@ -6,7 +6,7 @@
 
 const { getPool } = require('../config/db');
 
-// Valid status values (must match the CHECK constraint in MySQL schema)
+// Valid status values
 const VALID_STATUSES = ['Wishlist', 'Applied', 'Interview', 'Offer Received', 'Rejected'];
 
 // ============================================================
@@ -18,7 +18,7 @@ async function getJobs(req, res) {
     const pool = getPool();
 
     // Read query parameters from URL
-    // Example: /api/jobs?search=google&status=Applied&page=2&limit=10
+    
     const search  = req.query.search  || '';
     const status  = req.query.status  || '';
     const page    = Math.max(1, parseInt(req.query.page, 10)  || 1);
@@ -29,12 +29,14 @@ async function getJobs(req, res) {
     // Calculate pagination offset
     const offset = (page - 1) * limit;
 
-    // Whitelist allowed sort columns to prevent SQL injection
+    
+    //Only the allowed database columns can be used for sorting.
+   //This helps prevent SQL injection through the sorting column.
     const allowedSortCols = ['application_date', 'company_name', 'job_title', 'status', 'created_at'];
     const safeSortBy = allowedSortCols.includes(sortBy) ? sortBy : 'created_at';
 
-    // Build dynamic WHERE clause and params array
-    // Always filter by user_id so users only see their own jobs
+      // WHERE filters database records.
+      // req.user.id gets the logged-in user's ID from the authentication middleware.
     let whereConditions = 'WHERE user_id = ?';
     const whereParams = [req.user.id];
 
@@ -56,7 +58,7 @@ async function getJobs(req, res) {
     const [countRows] = await pool.execute(countQuery, whereParams);
     const totalJobs = countRows[0].total;
 
-    // Fetch the paginated dataset using MySQL LIMIT and OFFSET
+      // Fetch job records
     const dataQuery = `
       SELECT
         id, company_name, job_title, location, salary,
@@ -67,9 +69,9 @@ async function getJobs(req, res) {
       ORDER BY ${safeSortBy} ${sortDir}
       LIMIT ? OFFSET ?
     `;
-
+      //It copies all the values from whereParams into a new array.
     const [jobs] = await pool.execute(dataQuery, [...whereParams, limit, offset]);
-
+      //Send response
     res.json({
       success: true,
       data: jobs,
@@ -94,11 +96,11 @@ async function getJobById(req, res) {
   try {
     const pool  = getPool();
     const jobId = parseInt(req.params.id, 10);
-
+      //Validate ID
     if (isNaN(jobId)) {
       return res.status(400).json({ success: false, message: 'Invalid job ID.' });
     }
-
+   // Fetch job from database
     const [rows] = await pool.execute(
       `SELECT
          id, company_name, job_title, location, salary,
@@ -158,8 +160,7 @@ async function createJob(req, res) {
 
     const pool = getPool();
 
-    // ── Debug: verify the logged-in user actually exists in the DB ──
-    // This catches stale JWT tokens from before a DB reset
+      // Verify logged-in user
     const [userCheck] = await pool.execute(
       'SELECT id FROM Users WHERE id = ?',
       [req.user.id]
@@ -209,16 +210,16 @@ async function createJob(req, res) {
     });
 
   } catch (err) {
-    // Log the full real error to backend console (visible in Render logs)
+    // Log the full real error to backend console 
     console.error('CreateJob error code:', err.code);
     console.error('CreateJob error msg :', err.message);
     console.error('CreateJob error sql :', err.sql);
 
-    // Return the real DB error message so we can debug it in the browser
+    
     res.status(500).json({
       success: false,
       message: 'Failed to create job.',
-      // Show real error details (remove this in production after debugging)
+     
       debug: {
         code:    err.code    || 'UNKNOWN',
         detail:  err.message || 'No message',
@@ -331,7 +332,7 @@ async function deleteJob(req, res) {
       [jobId, req.user.id]
     );
 
-    // In MySQL, result.affectedRows gives number of affected rows
+    
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Job not found.' });
     }
@@ -409,5 +410,5 @@ async function getStats(req, res) {
     res.status(500).json({ success: false, message: 'Failed to fetch stats.' });
   }
 }
-
+// Export controller functions
 module.exports = { getJobs, getJobById, createJob, updateJob, deleteJob, getStats };

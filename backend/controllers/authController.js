@@ -4,9 +4,11 @@
 // Controllers contain the actual business logic for each route.
 // Uses mysql2/promise with connection pooling and parameterized queries (?).
 // ============================================================
-
+// Import bcrypt for password hashing and checking
 const bcrypt = require('bcryptjs');
-const jwt    = require('jsonwebtoken');
+// Import JWT to create login tokens
+const jwt = require('jsonwebtoken');
+// Import database connection
 const { getPool } = require('../config/db');
 
 // ============================================================
@@ -15,7 +17,7 @@ const { getPool } = require('../config/db');
 // ============================================================
 async function register(req, res) {
   try {
-    // Step 1: Get the data the user sent in the request body
+      // Step 1:Get user details from the frontend
     const { name, email, password } = req.body;
 
     // Step 2: Validate - make sure all fields are provided
@@ -26,7 +28,7 @@ async function register(req, res) {
       });
     }
 
-    // Step 3: Validate email format using regex
+    // Step 3: Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({
@@ -47,7 +49,7 @@ async function register(req, res) {
     const pool = getPool();
 
     // Step 6: Check if email already exists in the database
-    // We use parameterized queries (?) to prevent SQL injection!
+  
     const [existingUsers] = await pool.execute(
       'SELECT id FROM Users WHERE email = ?',
       [email.toLowerCase().trim()]
@@ -61,7 +63,7 @@ async function register(req, res) {
     }
 
     // Step 7: Hash the password using bcrypt
-    // The number 10 is the salt rounds - higher = more secure but slower
+   
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Step 8: Insert the new user into the database
@@ -70,7 +72,7 @@ async function register(req, res) {
       [name.trim(), email.toLowerCase().trim(), hashedPassword]
     );
 
-    // In MySQL, result.insertId gives the auto-generated primary key
+      // Get the ID of the newly created user
     const newUserId = result.insertId;
 
     // Fetch the newly created user record
@@ -100,6 +102,7 @@ async function register(req, res) {
     });
 
   } catch (err) {
+      // Handle registration errors
     console.error('Register error:', err.message);
     res.status(500).json({
       success: false,
@@ -159,7 +162,7 @@ async function login(req, res) {
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
-
+      // Send login success message, token and user details
     res.json({
       success: true,
       message: 'Logged in successfully!',
@@ -172,6 +175,7 @@ async function login(req, res) {
     });
 
   } catch (err) {
+      // Handle login errors
     console.error('Login error:', err.message);
     res.status(500).json({
       success: false,
@@ -186,9 +190,9 @@ async function login(req, res) {
 // ============================================================
 async function getMe(req, res) {
   try {
-    // req.user is set by authMiddleware from the verified JWT
+  
     const pool = getPool();
-
+      // Find the user using the ID from the login token
     const [rows] = await pool.execute(
       'SELECT id, name, email, created_at FROM Users WHERE id = ?',
       [req.user.id]
@@ -197,7 +201,7 @@ async function getMe(req, res) {
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
-
+      // Send the user's details to the frontend
     res.json({ success: true, user: rows[0] });
 
   } catch (err) {
@@ -234,7 +238,7 @@ async function updateProfile(req, res) {
     if (emailCheck.length > 0) {
       return res.status(409).json({ success: false, message: 'Email already in use.' });
     }
-
+      // Update the user's name and email in the database
     await pool.execute(
       'UPDATE Users SET name = ?, email = ?, updated_at = NOW() WHERE id = ?',
       [name.trim(), email.toLowerCase().trim(), req.user.id]
@@ -269,16 +273,16 @@ async function changePassword(req, res) {
       'SELECT password FROM Users WHERE id = ?',
       [req.user.id]
     );
-
+      // Check whether the user exists
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
-
+      // Check whether the current password is correct
     const isValid = await bcrypt.compare(currentPassword, rows[0].password);
     if (!isValid) {
       return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
     }
-
+      // Hash the new password before saving it
     const newHash = await bcrypt.hash(newPassword, 10);
 
     await pool.execute(
@@ -293,5 +297,5 @@ async function changePassword(req, res) {
     res.status(500).json({ success: false, message: 'Server error.' });
   }
 }
-
+// Export all functions so the routes file can use them
 module.exports = { register, login, getMe, updateProfile, changePassword };
