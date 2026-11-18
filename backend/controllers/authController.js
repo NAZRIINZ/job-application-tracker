@@ -1,26 +1,24 @@
 // ============================================================
 // authController.js - Handles user registration and authentication
 // ============================================================
-// Controllers contain the actual business logic for each route.
 // Uses mysql2/promise with connection pooling and parameterized queries (?).
 // ============================================================
-// Import bcrypt for password hashing and checking
+
 const bcrypt = require('bcryptjs');
-// Import JWT to create login tokens
-const jwt = require('jsonwebtoken');
-// Import database connection
+const jwt    = require('jsonwebtoken');
+const crypto = require('crypto');           // Built-in Node.js module for secure tokens
 const { getPool } = require('../config/db');
+const { sendWelcomeEmail, sendPasswordResetEmail } = require('../services/emailService');
 
 // ============================================================
 // REGISTER - POST /api/auth/register
-// Creates a new user account
+// Creates a new user account and sends welcome email
 // ============================================================
 async function register(req, res) {
   try {
-      // Step 1:Get user details from the frontend
     const { name, email, password } = req.body;
 
-    // Step 2: Validate - make sure all fields are provided
+    // Validate required fields
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -28,7 +26,7 @@ async function register(req, res) {
       });
     }
 
-    // Step 3: Validate email format
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({
@@ -37,7 +35,7 @@ async function register(req, res) {
       });
     }
 
-    // Step 4: Validate password length
+    // Validate password length
     if (password.length < 6) {
       return res.status(400).json({
         success: false,
@@ -45,11 +43,9 @@ async function register(req, res) {
       });
     }
 
-    // Step 5: Get database connection pool
     const pool = getPool();
 
-    // Step 6: Check if email already exists in the database
-  
+    // Check if email already exists
     const [existingUsers] = await pool.execute(
       'SELECT id FROM Users WHERE email = ?',
       [email.toLowerCase().trim()]
@@ -62,34 +58,35 @@ async function register(req, res) {
       });
     }
 
-    // Step 7: Hash the password using bcrypt
-   
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Step 8: Insert the new user into the database
+    // Insert new user
     const [result] = await pool.execute(
       'INSERT INTO Users (name, email, password) VALUES (?, ?, ?)',
       [name.trim(), email.toLowerCase().trim(), hashedPassword]
     );
 
-      // Get the ID of the newly created user
     const newUserId = result.insertId;
 
-    // Fetch the newly created user record
     const [newUsers] = await pool.execute(
       'SELECT id, name, email, created_at FROM Users WHERE id = ?',
       [newUserId]
     );
     const newUser = newUsers[0];
 
-    // Step 9: Create a JWT token for the new user
+    // Create JWT token
     const token = jwt.sign(
       { id: newUser.id, email: newUser.email, name: newUser.name },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 
-    // Step 10: Send success response with token and user info
+    // Send welcome email (non-blocking — don't let email failure block registration)
+    sendWelcomeEmail(newUser.email, newUser.name).catch(err => {
+      console.error('Welcome email error (non-blocking):', err.message);
+    });
+
     res.status(201).json({
       success: true,
       message: 'Account created successfully!',
@@ -102,7 +99,6 @@ async function register(req, res) {
     });
 
   } catch (err) {
-      // Handle registration errors
     console.error('Register error:', err.message);
     res.status(500).json({
       success: false,
@@ -113,13 +109,11 @@ async function register(req, res) {
 
 // ============================================================
 // LOGIN - POST /api/auth/login
-// Authenticates an existing user
 // ============================================================
 async function login(req, res) {
   try {
     const { email, password } = req.body;
 
-    // Validate inputs
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -129,15 +123,12 @@ async function login(req, res) {
 
     const pool = getPool();
 
-    // Find user by email
     const [rows] = await pool.execute(
       'SELECT id, name, email, password FROM Users WHERE email = ?',
       [email.toLowerCase().trim()]
     );
 
-    // If no user found with that email
     if (rows.length === 0) {
-      // Generic error message to prevent account enumeration
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password.',
@@ -145,8 +136,6 @@ async function login(req, res) {
     }
 
     const user = rows[0];
-
-    // Compare the entered password with the stored hash
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
@@ -156,13 +145,12 @@ async function login(req, res) {
       });
     }
 
-    // Password is valid! Generate JWT token
     const token = jwt.sign(
       { id: user.id, email: user.email, name: user.name },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
-      // Send login success message, token and user details
+
     res.json({
       success: true,
       message: 'Logged in successfully!',
@@ -175,7 +163,6 @@ async function login(req, res) {
     });
 
   } catch (err) {
-      // Handle login errors
     console.error('Login error:', err.message);
     res.status(500).json({
       success: false,
@@ -186,13 +173,11 @@ async function login(req, res) {
 
 // ============================================================
 // GET ME - GET /api/auth/me
-// Returns current logged-in user profile
 // ============================================================
 async function getMe(req, res) {
   try {
-  
     const pool = getPool();
-      // Find the user using the ID from the login token
+
     const [rows] = await pool.execute(
       'SELECT id, name, email, created_at FROM Users WHERE id = ?',
       [req.user.id]
@@ -201,7 +186,7 @@ async function getMe(req, res) {
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
-      // Send the user's details to the frontend
+
     res.json({ success: true, user: rows[0] });
 
   } catch (err) {
@@ -212,7 +197,6 @@ async function getMe(req, res) {
 
 // ============================================================
 // UPDATE PROFILE - PUT /api/auth/profile
-// Updates user name and email
 // ============================================================
 async function updateProfile(req, res) {
   try {
@@ -229,7 +213,6 @@ async function updateProfile(req, res) {
 
     const pool = getPool();
 
-    // Check if new email is already taken by another account
     const [emailCheck] = await pool.execute(
       'SELECT id FROM Users WHERE email = ? AND id != ?',
       [email.toLowerCase().trim(), req.user.id]
@@ -238,7 +221,7 @@ async function updateProfile(req, res) {
     if (emailCheck.length > 0) {
       return res.status(409).json({ success: false, message: 'Email already in use.' });
     }
-      // Update the user's name and email in the database
+
     await pool.execute(
       'UPDATE Users SET name = ?, email = ?, updated_at = NOW() WHERE id = ?',
       [name.trim(), email.toLowerCase().trim(), req.user.id]
@@ -273,16 +256,16 @@ async function changePassword(req, res) {
       'SELECT password FROM Users WHERE id = ?',
       [req.user.id]
     );
-      // Check whether the user exists
+
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
-      // Check whether the current password is correct
+
     const isValid = await bcrypt.compare(currentPassword, rows[0].password);
     if (!isValid) {
       return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
     }
-      // Hash the new password before saving it
+
     const newHash = await bcrypt.hash(newPassword, 10);
 
     await pool.execute(
@@ -297,5 +280,136 @@ async function changePassword(req, res) {
     res.status(500).json({ success: false, message: 'Server error.' });
   }
 }
-// Export all functions so the routes file can use them
-module.exports = { register, login, getMe, updateProfile, changePassword };
+
+// ============================================================
+// FORGOT PASSWORD - POST /api/auth/forgot-password
+// Generates reset token and sends email with reset link
+// ============================================================
+async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body;
+
+    if (!email || !email.trim()) {
+      return res.status(400).json({ success: false, message: 'Email is required.' });
+    }
+
+    const pool = getPool();
+
+    // Check if user exists
+    const [rows] = await pool.execute(
+      'SELECT id, name, email FROM Users WHERE email = ?',
+      [email.toLowerCase().trim()]
+    );
+
+    // Always return success (prevents email enumeration attacks)
+    if (rows.length === 0) {
+      return res.json({
+        success: true,
+        message: 'If that email is registered, a reset link has been sent.',
+      });
+    }
+
+    const user = rows[0];
+
+    // Generate a cryptographically secure 64-character hex token
+    const token = crypto.randomBytes(32).toString('hex');
+
+    // Token expires in 1 hour
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    const expiresAtMySQL = expiresAt.toISOString().slice(0, 19).replace('T', ' ');
+
+    // Delete any old tokens for this user
+    await pool.execute(
+      'DELETE FROM PasswordResetTokens WHERE user_id = ?',
+      [user.id]
+    );
+
+    // Store new token in database
+    await pool.execute(
+      'INSERT INTO PasswordResetTokens (user_id, token, expires_at) VALUES (?, ?, ?)',
+      [user.id, token, expiresAtMySQL]
+    );
+
+    // Build reset link
+    const frontendURL = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetLink   = `${frontendURL}/reset-password?token=${token}`;
+
+    // Send password reset email
+    const emailSent = await sendPasswordResetEmail(user.email, user.name, resetLink);
+
+    // Also log to console for local development
+    console.log('\n🔑 PASSWORD RESET REQUESTED');
+    console.log(`   User  : ${user.name} <${user.email}>`);
+    console.log(`   Link  : ${resetLink}`);
+    console.log(`   Email : ${emailSent ? '✅ Sent' : '❌ Failed'}`);
+    console.log(`   Expires: ${expiresAt.toLocaleString()}\n`);
+
+    res.json({
+      success: true,
+      message: 'If that email is registered, a reset link has been sent.',
+    });
+
+  } catch (err) {
+    console.error('ForgotPassword error:', err.message);
+    res.status(500).json({ success: false, message: 'Server error. Please try again.' });
+  }
+}
+
+// ============================================================
+// RESET PASSWORD - POST /api/auth/reset-password
+// Verifies token and sets new password
+// ============================================================
+async function resetPassword(req, res) {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Token and new password are required.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters.' });
+    }
+
+    const pool = getPool();
+
+    // Find valid, unused, non-expired token
+    const [tokens] = await pool.execute(
+      `SELECT prt.id, prt.user_id, prt.expires_at
+       FROM PasswordResetTokens prt
+       WHERE prt.token = ? AND prt.used = 0 AND prt.expires_at > NOW()`,
+      [token]
+    );
+
+    if (tokens.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'This reset link is invalid or has expired. Please request a new one.',
+      });
+    }
+
+    const resetRecord = tokens[0];
+
+    // Hash new password and update user
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await pool.execute(
+      'UPDATE Users SET password = ?, updated_at = NOW() WHERE id = ?',
+      [hashedPassword, resetRecord.user_id]
+    );
+
+    // Mark token as used
+    await pool.execute(
+      'UPDATE PasswordResetTokens SET used = 1 WHERE id = ?',
+      [resetRecord.id]
+    );
+
+    res.json({ success: true, message: 'Password reset successfully! You can now log in.' });
+
+  } catch (err) {
+    console.error('ResetPassword error:', err.message);
+    res.status(500).json({ success: false, message: 'Server error. Please try again.' });
+  }
+}
+
+module.exports = { register, login, getMe, updateProfile, changePassword, forgotPassword, resetPassword };

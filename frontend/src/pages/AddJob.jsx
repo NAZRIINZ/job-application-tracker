@@ -9,10 +9,17 @@ import API_URL from '../api'
 const STATUS_OPTIONS = ['Wishlist', 'Applied', 'Interview', 'Offer Received', 'Rejected']
 
 // Get today's date in YYYY-MM-DD format for the date input default
+//function todayISO() {
+//  return new Date().toISOString().split('T')[0]
+//}
 function todayISO() {
-  return new Date().toISOString().split('T')[0]
-}
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
 
+    return `${year}-${month}-${day}`;
+}
 export default function AddJob() {
   const navigate = useNavigate()
   const { getAuthHeaders } = useAuth()

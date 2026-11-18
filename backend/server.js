@@ -29,6 +29,9 @@ const authRoutes       = require('./routes/auth');
 const jobsRoutes       = require('./routes/jobs');
 const interviewsRoutes = require('./routes/interviews');
 
+// Step 5: Import the follow-up reminder scheduler
+const { startReminderScheduler, checkAndSendReminders } = require('./services/reminderScheduler');
+
 // Step 5: Create the Express application
 const app = express();
 // Configure CORS to allow requests from the frontend
@@ -84,12 +87,12 @@ app.get('/api/debug/tables', async (req, res) => {
     const [tables]  = await pool.execute('SHOW TABLES');
     const tableList = tables.map(r => Object.values(r)[0]);
 
-    // Show all users (id + email )
+    // Show all users (id + email)
     const [users] = await pool.execute('SELECT id, name, email, created_at FROM Users');
 
     // Show table_names case-sensitivity setting
     const [caseVar] = await pool.execute("SHOW VARIABLES LIKE 'lower_case_table_names'");
-      // Send the database details as a response
+
     res.json({
       success: true,
       database: process.env.DB_DATABASE,
@@ -98,8 +101,17 @@ app.get('/api/debug/tables', async (req, res) => {
       lower_case_table_names: caseVar[0]?.Value || 'unknown',
     });
   } catch (err) {
-      // Send an error message if something goes wrong
     res.status(500).json({ success: false, error: err.message, code: err.code });
+  }
+});
+
+// Manually trigger follow-up reminder emails (for testing)
+app.get('/api/debug/send-reminders', async (req, res) => {
+  try {
+    await checkAndSendReminders();
+    res.json({ success: true, message: 'Follow-up reminder check completed! Check the console for details.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -132,6 +144,32 @@ async function startServer() {
   try {
     // Connect to database first
     await connectDB();
+
+    // Auto-create PasswordResetTokens table if it doesn't exist
+    try {
+      const { getPool } = require('./config/db');
+      const pool = getPool();
+      await pool.execute(`
+        CREATE TABLE IF NOT EXISTS PasswordResetTokens (
+          id          INT AUTO_INCREMENT PRIMARY KEY,
+          user_id     INT NOT NULL,
+          token       VARCHAR(255) NOT NULL UNIQUE,
+          expires_at  DATETIME NOT NULL,
+          used        TINYINT(1) DEFAULT 0,
+          created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT fk_reset_token_user FOREIGN KEY (user_id)
+              REFERENCES Users(id) ON DELETE CASCADE,
+          INDEX ix_reset_token (token),
+          INDEX ix_reset_token_user (user_id)
+        ) ENGINE=InnoDB
+      `);
+      console.log('✅ PasswordResetTokens table ready.');
+    } catch (err) {
+      console.error('⚠️ PasswordResetTokens table setup:', err.message);
+    }
+
+    // Start the daily follow-up reminder scheduler
+    startReminderScheduler();
 
     // Only start the server after successful DB connection
     app.listen(PORT, () => {

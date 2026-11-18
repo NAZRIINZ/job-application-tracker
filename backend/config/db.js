@@ -23,7 +23,8 @@ const dbConfig = {
   waitForConnections: true,
   connectionLimit:    10,
   queueLimit:         0,
-  connectTimeout:     30000,          // 30s — prevents hanging on slow cloud DB
+  connectTimeout: 30000,
+  dateStrings: true,    // 30s — prevents hanging on slow cloud DB
   // Keep connections alive so the pool doesn't use stale closed connections
   // (important on Render free tier which sleeps between requests)
   enableKeepAlive:    true,
