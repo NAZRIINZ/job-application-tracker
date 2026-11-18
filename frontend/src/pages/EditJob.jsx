@@ -18,11 +18,36 @@ function isValidUrl(str) {
 
 // Format a date from SQL Server (e.g. "2024-01-10T00:00:00.000Z") to "YYYY-MM-DD"
 // The HTML date input requires the YYYY-MM-DD format
-function toInputDate(dateStr) {
-  if (!dateStr) return ''
-  return new Date(dateStr).toISOString().split('T')[0]
-}
+//function toInputDate(dateStr) {
+//  if (!dateStr) return ''
+//  return new Date(dateStr).toISOString().split('T')[0]
+//}
 
+
+// Convert API date into YYYY-MM-DD for HTML date input
+function toInputDate(dateValue) {
+    if (!dateValue) return '';
+
+    if (typeof dateValue === 'string') {
+        // Handle ISO timestamps returned from MySQL
+        if (dateValue.includes('T')) {
+            const date = new Date(dateValue);
+
+            if (!isNaN(date.getTime())) {
+                return date.toISOString().slice(0, 10);
+            }
+        }
+
+        // Handle normal MySQL DATE string
+        return dateValue.slice(0, 10);
+    }
+
+    if (dateValue instanceof Date && !isNaN(dateValue.getTime())) {
+        return dateValue.toISOString().slice(0, 10);
+    }
+
+    return '';
+}
 export default function EditJob() {
   const { id } = useParams()              // Get job ID from URL (/jobs/5/edit → id = "5")
   const navigate = useNavigate()
@@ -44,7 +69,9 @@ export default function EditJob() {
 
         if (data.success) {
           // Pre-populate the form with existing values
-          const job = data.data
+            const job = data.data
+            console.log('Application date from API:', job.application_date);
+            console.log('Follow-up date from API:', job.follow_up_date);
           setForm({
             company_name:     job.company_name     || '',
             job_title:        job.job_title        || '',

@@ -5,6 +5,7 @@
 // ============================================================
 
 const { getPool } = require('../config/db');
+const { sendStatusUpdateEmail } = require('../services/emailService');
 
 // Valid status values
 const VALID_STATUSES = ['Wishlist', 'Applied', 'Interview', 'Offer Received', 'Rejected'];
@@ -229,89 +230,151 @@ async function createJob(req, res) {
   }
 }
 
+
 // ============================================================
 // UPDATE JOB - PUT /api/jobs/:id
 // ============================================================
 async function updateJob(req, res) {
-  try {
-    const jobId = parseInt(req.params.id, 10);
+    try {
+        const jobId = parseInt(req.params.id, 10);
 
-    if (isNaN(jobId)) {
-      return res.status(400).json({ success: false, message: 'Invalid job ID.' });
-    }
+        if (isNaN(jobId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid job ID.',
+            });
+        }
 
-    const {
-      company_name,
-      job_title,
-      location,
-      salary,
-      application_date,
-      status,
-      job_link,
-      notes,
-      follow_up_date,
-    } = req.body;
+        const {
+            company_name,
+            job_title,
+            location,
+            salary,
+            application_date,
+            status,
+            job_link,
+            notes,
+            follow_up_date,
+        } = req.body;
 
-    if (!company_name || !job_title || !application_date) {
-      return res.status(400).json({
-        success: false,
-        message: 'Company name, job title, and application date are required.',
-      });
-    }
+        // Validate required fields
+        if (!company_name || !job_title) {
+            return res.status(400).json({
+                success: false,
+                message: 'Company name and job title are required.',
+            });
+        }
 
-    if (status && !VALID_STATUSES.includes(status)) {
-      return res.status(400).json({ success: false, message: 'Invalid status value.' });
-    }
+        // Check application date only when it is included in the request
+        const hasApplicationDate =
+            Object.prototype.hasOwnProperty.call(req.body, 'application_date');
 
-    const pool = getPool();
+        const hasFollowUpDate =
+            Object.prototype.hasOwnProperty.call(req.body, 'follow_up_date');
 
-    // Verify ownership before updating
-    const [existing] = await pool.execute(
-      'SELECT id FROM JobApplications WHERE id = ? AND user_id = ?',
-      [jobId, req.user.id]
-    );
+        if (hasApplicationDate && !application_date) {
+            return res.status(400).json({
+                success: false,
+                message: 'Application date cannot be empty.',
+            });
+        }
 
-    if (existing.length === 0) {
-      return res.status(404).json({ success: false, message: 'Job not found.' });
-    }
+        // Validate status
+        if (status && !VALID_STATUSES.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid status value.',
+            });
+        }
 
-    // Update the job record (using NOW() for updated_at)
-    await pool.execute(
-      `UPDATE JobApplications
-       SET
-         company_name     = ?,
-         job_title        = ?,
-         location         = ?,
-         salary           = ?,
-         application_date = ?,
-         status           = ?,
-         job_link         = ?,
-         notes            = ?,
-         follow_up_date   = ?,
-         updated_at       = NOW()
+        const pool = getPool();
+
+        // Verify that the job belongs to the logged-in user
+        const [existing] = await pool.execute(
+            `SELECT id, status, company_name, job_title
+       FROM JobApplications
        WHERE id = ? AND user_id = ?`,
-      [
-        company_name.trim(),
-        job_title.trim(),
-        location ? location.trim() : null,
-        salary ? salary.trim() : null,
-        application_date,
-        status || 'Wishlist',
-        job_link ? job_link.trim() : null,
-        notes ? notes.trim() : null,
-        follow_up_date || null,
-        jobId,
-        req.user.id,
-      ]
-    );
+            [jobId, req.user.id]
+        );
 
-    res.json({ success: true, message: 'Job updated successfully!' });
+        if (existing.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Job not found.',
+            });
+        }
 
-  } catch (err) {
-    console.error('UpdateJob error:', err.message);
-    res.status(500).json({ success: false, message: 'Failed to update job.' });
-  }
+        const oldStatus = existing[0].status;
+        const newStatus = status || oldStatus;
+
+        // Update job details
+        await pool.execute(
+            `UPDATE JobApplications
+       SET
+         company_name = ?,
+         job_title = ?,
+         location = ?,
+         salary = ?,
+         application_date = IF(?, ?, application_date),
+         status = ?,
+         job_link = ?,
+         notes = ?,
+         follow_up_date = IF(?, ?, follow_up_date),
+         updated_at = NOW()
+       WHERE id = ? AND user_id = ?`,
+            [
+                company_name.trim(),
+                job_title.trim(),
+                location ? location.trim() : null,
+                salary ? salary.trim() : null,
+                hasApplicationDate,
+                application_date || null,
+                newStatus,
+                job_link ? job_link.trim() : null,
+                notes ? notes.trim() : null,
+                hasFollowUpDate,
+                follow_up_date || null,
+                jobId,
+                req.user.id,
+            ]
+        );
+
+        // Send status update email if the status has changed
+        if (oldStatus !== newStatus) {
+            const [userRows] = await pool.execute(
+                'SELECT name, email FROM Users WHERE id = ?',
+                [req.user.id]
+            );
+
+            if (userRows.length > 0) {
+                sendStatusUpdateEmail(
+                    userRows[0].email,
+                    userRows[0].name,
+                    company_name.trim(),
+                    job_title.trim(),
+                    oldStatus,
+                    newStatus
+                ).catch(err =>
+                    console.error('Status email error (non-blocking):', err.message)
+                );
+            }
+        }
+
+        return res.json({
+            success: true,
+            message: 'Job updated successfully!',
+        });
+
+    } catch (err) {
+        console.error('UpdateJob error:', err.message);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to update job.',
+        });
+    }
 }
+
 
 // ============================================================
 // DELETE JOB - DELETE /api/jobs/:id
