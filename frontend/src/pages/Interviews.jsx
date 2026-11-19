@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react'
 
 import { useAuth } from '../context/AuthContext'
 import API_URL from '../api'
-import Calendar from '../components/Calendar';
+
 import { LoadingSpinner } from '../components/Layout';
 
 
@@ -191,12 +191,24 @@ export default function Interviews() {
     }
 
     // Build calendar events from all interviews
-    const interviewEvents = interviews.map(i => ({
-        date: i.interview_date,
-        id: i.id,
-        label: `${i.interview_type} - ${i.result}`,
-        type: 'interview',
-    }));
+
+    // Build calendar events with company and interview details
+    const interviewEvents = interviews.map(interview => {
+        const job = jobs.find(
+            j => String(j.id) === String(interview.job_id)
+        );
+
+        return {
+            id: interview.id,
+            date: interview.interview_date,
+            company: job?.company_name || 'Unknown Company',
+            jobTitle: job?.job_title || '',
+            interviewType: interview.interview_type || 'Interview',
+            interviewTime: interview.interview_time || '',
+            result: interview.result || 'Scheduled',
+        };
+    });
+
 
     // Open the selected interview in the full-page edit form
     const handleCalendarClick = (event) => {
@@ -207,6 +219,20 @@ export default function Interviews() {
         if (selectedInterview) {
             openEditForm(selectedInterview);
         }
+    };
+
+    // Open Add Interview form when clicking an empty calendar date
+    const handleDateClick = (date) => {
+        setForm({
+            ...defaultForm(),
+            interview_date: date
+        });
+
+        setFormErrors({});
+        setFormError('');
+        setEditMode(false);
+        setEditId(null);
+        setShowForm(true);
     };
 
     // Show full-page Add/Edit Interview form
@@ -441,10 +467,321 @@ export default function Interviews() {
                 <div className="alert alert-error">{error}</div>
             )}
 
-            <Calendar
+            <InterviewCalendar
                 events={interviewEvents}
-                onDateClick={handleCalendarClick}
+                onEventClick={handleCalendarClick}
+                onDateClick={handleDateClick}
             />
+
+        </div>
+    );
+}
+
+// ============================================================
+// InterviewCalendar - Monthly calendar with interview details
+// ============================================================
+
+function getDateKey(value) {
+    if (!value) return '';
+
+    // Keep SQL date values in local calendar format
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+        return value.slice(0, 10);
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return '';
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
+function InterviewCalendar({ events, onEventClick, onDateClick }) {
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+
+    const todayKey = getDateKey(new Date());
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // Always display 6 calendar weeks
+    const calendarDays = Array.from({ length: 42 }, (_, index) => {
+        const dayNumber = index - firstDay + 1;
+        return new Date(year, month, dayNumber);
+    });
+
+    function changeMonth(amount) {
+        setCurrentMonth(prev => (
+            new Date(
+                prev.getFullYear(),
+                prev.getMonth() + amount,
+                1
+            )
+        ));
+    }
+
+    function getEventStyle(event) {
+        const eventDate = getDateKey(event.date);
+        const result = String(event.result).toLowerCase();
+
+        if (result === 'cancelled') {
+            return {
+                background: '#fee2e2',
+                color: '#b91c1c',
+                border: '#ef4444',
+            };
+        }
+
+        if (result === 'completed' || result === 'passed') {
+            return {
+                background: '#dcfce7',
+                color: '#166534',
+                border: '#22c55e',
+            };
+        }
+
+        if (eventDate < todayKey) {
+            return {
+                background: '#f1f5f9',
+                color: '#64748b',
+                border: '#94a3b8',
+            };
+        }
+
+        return {
+            background: '#dbeafe',
+            color: '#1d4ed8',
+            border: '#3b82f6',
+        };
+    }
+
+    const monthEvents = events.reduce((grouped, event) => {
+        const key = getDateKey(event.date);
+
+        if (!grouped[key]) grouped[key] = [];
+
+        grouped[key].push(event);
+
+        return grouped;
+    }, {});
+
+    return (
+        <div className="card" style={{ padding: '20px' }}>
+
+            {/* Calendar Header */}
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '12px',
+                flexWrap: 'wrap',
+                marginBottom: '20px'
+            }}>
+                <h2 className="card-title">
+                    {currentMonth.toLocaleDateString('en-US', {
+                        month: 'long',
+                        year: 'numeric'
+                    })}
+                </h2>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => changeMonth(-1)}
+                    >
+                        ←
+                    </button>
+
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => setCurrentMonth(new Date())}
+                    >
+                        Today
+                    </button>
+
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => changeMonth(1)}
+                    >
+                        →
+                    </button>
+                </div>
+            </div>
+
+            {/* Color Legend */}
+            <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '16px',
+                marginBottom: '18px',
+                fontSize: '13px'
+            }}>
+                <span style={{ color: '#2563eb' }}>● Upcoming</span>
+                <span style={{ color: '#16a34a' }}>● Completed / Passed</span>
+                <span style={{ color: '#64748b' }}>● Past</span>
+                <span style={{ color: '#dc2626' }}>● Cancelled</span>
+            </div>
+
+            {/* Weekday Names */}
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+                borderTop: '1px solid #e5e7eb',
+                borderLeft: '1px solid #e5e7eb'
+            }}>
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                    <div
+                        key={day}
+                        style={{
+                            textAlign: 'center',
+                            padding: '12px 2px',
+                            fontWeight: '600',
+                            fontSize: '13px',
+                            background: '#f8fafc',
+                            borderRight: '1px solid #e5e7eb',
+                            borderBottom: '1px solid #e5e7eb'
+                        }}
+                    >
+                        {day}
+                    </div>
+                ))}
+
+                {/* Calendar Dates */}
+                {calendarDays.map((date, index) => {
+                    const dateKey = getDateKey(date);
+
+                    const isCurrentMonth = date.getMonth() === month;
+
+                    const isToday = dateKey === todayKey;
+
+                    const dayEvents = monthEvents[dateKey] || [];
+
+                    return (
+                        <div
+                            key={index}
+                            onClick={() => onDateClick(dateKey)}
+                            title="Click to schedule an interview"
+                            style={{
+                                minWidth: 0,
+                                minHeight: '125px',
+                                padding: '6px',
+                                background: isCurrentMonth ? '#ffffff' : '#f8fafc',
+                                borderRight: '1px solid #e5e7eb',
+                                borderBottom: '1px solid #e5e7eb',
+                                overflow: 'hidden',
+                                cursor: 'pointer'
+                            }}
+                        
+                        >
+                            {/* Date Number */}
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'flex-end',
+                                marginBottom: '6px'
+                            }}>
+                                <span style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: '25px',
+                                    height: '25px',
+                                    borderRadius: '50%',
+                                    background: isToday ? '#2563eb' : 'transparent',
+                                    color: isToday ? '#ffffff' : isCurrentMonth ? '#334155' : '#94a3b8',
+                                    fontSize: '13px',
+                                    fontWeight: isToday ? '700' : '500'
+                                }}>
+                                    {date.getDate()}
+                                </span>
+                            </div>
+
+                            {/* Interview Events */}
+                            <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '5px'
+                            }}>
+                                {dayEvents.map(event => {
+                                    const colors = getEventStyle(event);
+
+                                    const time = formatTime(event.interviewTime);
+
+                                    return (
+                                        <button
+                                            key={event.id}
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onEventClick(event);
+                                            }}
+                                            title={`${event.company} - ${event.interviewType} - ${time}`}
+                                            style={{
+                                                width: '100%',
+                                                textAlign: 'left',
+                                                padding: '6px',
+                                                borderRadius: '5px',
+                                                border: 'none',
+                                                borderLeft: `3px solid ${colors.border}`,
+                                                background: colors.background,
+                                                color: colors.color,
+                                                cursor: 'pointer',
+                                                fontSize: '11px',
+                                                overflow: 'hidden'
+                                            }}
+                                        >
+                                            <div style={{
+                                                fontWeight: '700',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                {event.company}
+                                            </div>
+
+                                            <div style={{
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                                marginTop: '2px'
+                                            }}>
+                                                {event.interviewType}
+                                            </div>
+
+                                            {time && (
+                                                <div style={{ marginTop: '2px' }}>
+                                                    {time}
+                                                </div>
+                                            )}
+
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* No Events Message */}
+            {events.length === 0 && (
+                <p style={{
+                    textAlign: 'center',
+                    color: '#64748b',
+                    padding: '20px'
+                }}>
+                    No interviews scheduled yet.
+                </p>
+            )}
 
         </div>
     );

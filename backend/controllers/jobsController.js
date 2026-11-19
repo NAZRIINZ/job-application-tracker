@@ -21,7 +21,9 @@ async function getJobs(req, res) {
     // Read query parameters from URL
     
     const search  = req.query.search  || '';
-    const status  = req.query.status  || '';
+      const status = req.query.status || '';
+      const fromDate = req.query.fromDate || '';
+      const toDate = req.query.toDate || '';
     const page    = Math.max(1, parseInt(req.query.page, 10)  || 1);
     const limit   = Math.max(1, parseInt(req.query.limit, 10) || 10);
     const sortBy  = req.query.sortBy  || 'created_at';
@@ -52,7 +54,17 @@ async function getJobs(req, res) {
     if (status && VALID_STATUSES.includes(status)) {
       whereConditions += ' AND status = ?';
       whereParams.push(status);
-    }
+      }
+      // Add application date range filter
+      if (fromDate) {
+          whereConditions += ' AND application_date >= ?';
+          whereParams.push(fromDate);
+      }
+
+      if (toDate) {
+          whereConditions += ' AND application_date <= ?';
+          whereParams.push(toDate);
+      }
 
     // Count total matching records (for frontend pagination numbers)
     const countQuery = `SELECT COUNT(*) AS total FROM JobApplications ${whereConditions}`;

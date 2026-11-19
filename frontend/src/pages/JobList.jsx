@@ -26,7 +26,9 @@ export default function JobList() {
 
   // Filters & pagination
   const [search,   setSearch]     = useState('')
-  const [status,   setStatus]     = useState('')
+  const [status, setStatus] = useState('')
+  const [fromDate, setFromDate] = useState('')
+  const [toDate, setToDate] = useState('')
   const [page,     setPage]       = useState(1)
 
   // Delete modal
@@ -42,6 +44,8 @@ export default function JobList() {
       const params = new URLSearchParams({ page, limit: 10 })
       if (search) params.set('search', search)
       if (status) params.set('status', status)
+      if (fromDate) params.set('fromDate', fromDate)
+      if (toDate) params.set('toDate', toDate)
 
         
         const res = await fetch(`${API_URL}/api/jobs?${params}`, { headers: getAuthHeaders() })
@@ -58,7 +62,7 @@ export default function JobList() {
     } finally {
       setLoading(false)
     }
-  }, [search, status, page])
+  }, [search, status, fromDate, toDate, page, getAuthHeaders])
 
   // Re-fetch whenever filters or page changes
   useEffect(() => {
@@ -142,11 +146,47 @@ export default function JobList() {
                   <option key={s} value={s}>{s || 'All Statuses'}</option>
                 ))}
               </select>
-            </div>
-            {(search || status) && (
+                      </div>
+                      {/* From Date */}
+                      <div className="filter-select">
+                          <input
+                              type="date"
+                              className="form-control"
+                              value={fromDate}
+                              max={toDate || undefined}
+                              title="From Date"
+                              onChange={e => {
+                                  setFromDate(e.target.value)
+                                  setPage(1)
+                              }}
+                          />
+                      </div>
+
+                      {/* To Date */}
+                      <div className="filter-select">
+                          <input
+                              type="date"
+                              className="form-control"
+                              value={toDate}
+                              min={fromDate || undefined}
+                              title="To Date"
+                              onChange={e => {
+                                  setToDate(e.target.value)
+                                  setPage(1)
+                              }}
+                          />
+                      </div>
+                      {(search || status || fromDate || toDate) && (
               <button
                 className="btn btn-secondary"
-                onClick={() => { setSearchInput(''); setSearch(''); setStatus(''); setPage(1); }}
+                              onClick={() => {
+                                  setSearchInput('')
+                                  setSearch('')
+                                  setStatus('')
+                                  setFromDate('')
+                                  setToDate('')
+                                  setPage(1)
+                              }}
               >
                 ✕ Clear
               </button>
@@ -170,16 +210,16 @@ export default function JobList() {
         /* Empty state */
         <div className="card">
           <div className="empty-state">
-            <div className="empty-icon">{search || status ? '🔍' : '📋'}</div>
+               <div className="empty-icon">{search || status || fromDate || toDate ? '🔍' : '📋'}</div>
             <p className="empty-title">
-              {search || status ? 'No matching applications' : 'No applications yet'}
+                 {search || status || fromDate || toDate? 'No matching applications': 'No applications yet'}
             </p>
             <p className="empty-desc">
-              {search || status
+                  {search || status || fromDate || toDate
                 ? 'Try adjusting your search or filters'
                 : 'Start by adding your first job application'}
             </p>
-            {!search && !status && (
+                 {!search && !status && !fromDate && !toDate && (
               <Link to="/jobs/new" className="btn btn-primary">Add First Application</Link>
             )}
           </div>

@@ -6,7 +6,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { LoadingSpinner } from '../components/Layout'
 import API_URL from '../api'
-import Calendar from '../components/Calendar'
+
 
 const STATUS_OPTIONS = ['Wishlist', 'Applied', 'Interview', 'Offer Received', 'Rejected']
 
@@ -119,13 +119,7 @@ export default function EditJob() {
 
   if (loading) return <LoadingSpinner text="Loading job details..." />
 
-  // Calendar events for this job (application date)
-  const calendarEvents = form ? [{
-    date: form.application_date,
-    id,
-    label: form.company_name,
-    type: 'job',
-  }] : [];
+ 
 
   if (!form) {
     return (
@@ -139,9 +133,6 @@ export default function EditJob() {
     );
   }
 
-  const handleCalendarClick = (event) => {
-    navigate(`/jobs/${event.id}/edit`);
-  };
 
   return (
     <div>
@@ -153,8 +144,7 @@ export default function EditJob() {
         <Link to="/jobs" className="btn btn-secondary">← Back to Jobs</Link>
       </div>
 
-      {/* Calendar */}
-      <Calendar events={calendarEvents} onDateClick={handleCalendarClick} />
+  
 
       {success && (
         <div className="alert alert-success">
