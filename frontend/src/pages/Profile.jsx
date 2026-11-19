@@ -272,28 +272,7 @@ export default function Profile() {
       </div>
 
       {/* Security info card */}
-      <div className="card">
-        <div className="card-header">
-          <h2 className="card-title">🛡️ Security Information</h2>
-        </div>
-        <div className="card-body">
-          <div className="alert alert-info">
-            <div>
-              <p><strong>How your data is protected:</strong></p>
-              <ul style={{ marginTop: '8px', paddingLeft: '20px', lineHeight: '2' }}>
-                <li>Passwords are hashed with bcrypt (10 salt rounds) — never stored in plain text</li>
-                <li>Authentication uses JWT tokens with 7-day expiration</li>
-                <li>All database queries use parameterized statements to prevent SQL injection</li>
-                <li>You can only access your own job records — other users' data is protected</li>
-              </ul>
-              <p style={{ marginTop: '8px', fontSize: '0.8rem', opacity: 0.8 }}>
-                ⚠️ Note: JWT tokens are stored in localStorage in this project for simplicity.
-                In a production app, HttpOnly cookies are more secure against XSS attacks.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+          
     </div>
   )
 }

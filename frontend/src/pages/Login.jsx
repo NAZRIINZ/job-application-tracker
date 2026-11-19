@@ -71,7 +71,29 @@ export default function Login() {
     }
   }
 
-  return (
+    return (
+          <>
+            <style>{`
+        .forgot-password-row {
+          display: flex;
+          justify-content: flex-end;
+          margin-top: -10px;
+          margin-bottom: 18px;
+        }
+
+        .forgot-password-row a {
+          color: #1749b5;
+          font-size: 13px;
+          font-weight: 600;
+          text-decoration: none;
+        }
+
+        .forgot-password-row a:hover {
+          color: #10398f;
+          text-decoration: underline;
+        }
+      `}</style>
+
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-logo">💼</div>
@@ -124,7 +146,12 @@ export default function Login() {
               <p className="form-error">⚠ {errors.password}</p>
             )}
           </div>
-
+                  {/* Forgot Password */}
+                  <div className="forgot-password-row">
+                      <Link to="/forgot-password">
+                          Forgot Password?
+                      </Link>
+                  </div>
           <button
             type="submit"
             className="btn btn-primary btn-full btn-lg"
@@ -148,6 +175,7 @@ export default function Login() {
           <Link to="/register">Create one free →</Link>
         </div>
       </div>
-    </div>
+            </div>
+        </>
   )
 }
