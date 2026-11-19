@@ -16,6 +16,8 @@ import Layout from './components/Layout'
 import Home     from './pages/Home'
 import Login    from './pages/Login'
 import Register from './pages/Register'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 
 // Pages (protected - require login)
 import Dashboard  from './pages/Dashboard'
@@ -85,7 +87,9 @@ function App() {
           <Route path="/"         element={<Home />} />
           <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-
+          {/* Password reset routes - accessible without login */}
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           {/* Protected routes - require login */}
           <Route path="/dashboard"        element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/jobs"             element={<ProtectedRoute><JobList /></ProtectedRoute>} />

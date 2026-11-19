@@ -90,7 +90,7 @@ export default function Register() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-logo">🚀</div>
+              <div className="auth-logo">💼</div>
         <h1 className="auth-title">Create your account</h1>
         <p className="auth-subtitle">Start tracking your job applications today</p>
 
@@ -172,21 +172,13 @@ export default function Register() {
             </div>
           </div>
 
-          {/* Security note for beginners */}
-          <div className="alert alert-warning" style={{ fontSize: '0.8rem', marginBottom: '16px' }}>
-            <div>
-              <strong>🔒 Security note:</strong> Your password is hashed with bcrypt before
-              storage — it's never stored in plain text. JWT tokens are stored in
-              localStorage for simplicity in this project (not ideal for production).
-            </div>
-          </div>
-
+       
           <button
             type="submit"
             className="btn btn-primary btn-full btn-lg"
             disabled={loading}
           >
-            {loading ? 'Creating account...' : '🚀 Create Account'}
+            {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
 

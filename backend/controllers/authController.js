@@ -281,135 +281,214 @@ async function changePassword(req, res) {
   }
 }
 
+
 // ============================================================
 // FORGOT PASSWORD - POST /api/auth/forgot-password
-// Generates reset token and sends email with reset link
+// Generates a secure reset token and sends email
 // ============================================================
 async function forgotPassword(req, res) {
-  try {
-    const { email } = req.body;
+    try {
+        const { email } = req.body;
 
-    if (!email || !email.trim()) {
-      return res.status(400).json({ success: false, message: 'Email is required.' });
+        if (!email || !email.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email is required.'
+            });
+        }
+
+        const pool = getPool();
+
+        const normalizedEmail = email.toLowerCase().trim();
+
+        // Find the registered user
+        const [rows] = await pool.execute(
+            'SELECT id, name, email FROM Users WHERE email = ?',
+            [normalizedEmail]
+        );
+
+        // Do not reveal whether an email is registered
+        const genericMessage =
+            'If that email is registered, a reset link has been sent.';
+
+        if (rows.length === 0) {
+            return res.json({
+                success: true,
+                message: genericMessage
+            });
+        }
+
+        const user = rows[0];
+
+        // Generate a secure random token for the email link
+        const token = crypto.randomBytes(32).toString('hex');
+
+        // Store only the SHA-256 hash in the database
+        const tokenHash = crypto
+            .createHash('sha256')
+            .update(token)
+            .digest('hex');
+
+        // Remove previous reset tokens for this user
+        await pool.execute(
+            'DELETE FROM PasswordResetTokens WHERE user_id = ?',
+            [user.id]
+        );
+
+        // Set expiry to one hour using MySQL server time
+        await pool.execute(
+            `INSERT INTO PasswordResetTokens
+       (user_id, token, expires_at)
+       VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR))`,
+            [user.id, tokenHash]
+        );
+
+        // Build reset link
+        const frontendURL = (
+            process.env.FRONTEND_URL || 'http://localhost:5173'
+        ).replace(/\/+$/, '');
+
+        const resetLink =
+            `${frontendURL}/reset-password?token=${token}`;
+
+        // Send reset email
+        const emailSent = await sendPasswordResetEmail(
+            user.email,
+            user.name,
+            resetLink
+        );
+
+        // If email sending fails, invalidate the generated token
+        if (!emailSent) {
+            await pool.execute(
+                'DELETE FROM PasswordResetTokens WHERE token = ?',
+                [tokenHash]
+            );
+
+            console.error('Password reset email could not be sent.');
+        }
+
+        // Always return the same response for privacy
+        return res.json({
+            success: true,
+            message: genericMessage
+        });
+
+    } catch (err) {
+        console.error('ForgotPassword error:', err.message);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Server error. Please try again.'
+        });
     }
-
-    const pool = getPool();
-
-    // Check if user exists
-    const [rows] = await pool.execute(
-      'SELECT id, name, email FROM Users WHERE email = ?',
-      [email.toLowerCase().trim()]
-    );
-
-    // Always return success (prevents email enumeration attacks)
-    if (rows.length === 0) {
-      return res.json({
-        success: true,
-        message: 'If that email is registered, a reset link has been sent.',
-      });
-    }
-
-    const user = rows[0];
-
-    // Generate a cryptographically secure 64-character hex token
-    const token = crypto.randomBytes(32).toString('hex');
-
-    // Token expires in 1 hour
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-    const expiresAtMySQL = expiresAt.toISOString().slice(0, 19).replace('T', ' ');
-
-    // Delete any old tokens for this user
-    await pool.execute(
-      'DELETE FROM PasswordResetTokens WHERE user_id = ?',
-      [user.id]
-    );
-
-    // Store new token in database
-    await pool.execute(
-      'INSERT INTO PasswordResetTokens (user_id, token, expires_at) VALUES (?, ?, ?)',
-      [user.id, token, expiresAtMySQL]
-    );
-
-    // Build reset link
-    const frontendURL = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const resetLink   = `${frontendURL}/reset-password?token=${token}`;
-
-    // Send password reset email
-    const emailSent = await sendPasswordResetEmail(user.email, user.name, resetLink);
-
-    // Also log to console for local development
-    console.log('\n🔑 PASSWORD RESET REQUESTED');
-    console.log(`   User  : ${user.name} <${user.email}>`);
-    console.log(`   Link  : ${resetLink}`);
-    console.log(`   Email : ${emailSent ? '✅ Sent' : '❌ Failed'}`);
-    console.log(`   Expires: ${expiresAt.toLocaleString()}\n`);
-
-    res.json({
-      success: true,
-      message: 'If that email is registered, a reset link has been sent.',
-    });
-
-  } catch (err) {
-    console.error('ForgotPassword error:', err.message);
-    res.status(500).json({ success: false, message: 'Server error. Please try again.' });
-  }
 }
+
+
 
 // ============================================================
 // RESET PASSWORD - POST /api/auth/reset-password
-// Verifies token and sets new password
+// Verifies token and securely updates password
 // ============================================================
 async function resetPassword(req, res) {
-  try {
-    const { token, newPassword } = req.body;
+    let connection;
 
-    if (!token || !newPassword) {
-      return res.status(400).json({ success: false, message: 'Token and new password are required.' });
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Token and new password are required.'
+            });
+        }
+
+        if (typeof newPassword !== 'string' || newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password must be at least 6 characters.'
+            });
+        }
+
+        // Hash the token received from the email URL
+        const tokenHash = crypto
+            .createHash('sha256')
+            .update(token)
+            .digest('hex');
+
+        const pool = getPool();
+
+        // Start database transaction
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
+
+        // Find valid, unused and non-expired token
+        const [tokens] = await connection.execute(
+            `SELECT id, user_id
+       FROM PasswordResetTokens
+       WHERE token = ?
+         AND used = 0
+         AND expires_at > NOW()
+       FOR UPDATE`,
+            [tokenHash]
+        );
+
+        if (tokens.length === 0) {
+            await connection.rollback();
+
+            return res.status(400).json({
+                success: false,
+                message: 'This reset link is invalid or has expired. Please request a new one.'
+            });
+        }
+
+        const resetRecord = tokens[0];
+
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update user password
+        await connection.execute(
+            `UPDATE Users
+       SET password = ?, updated_at = NOW()
+       WHERE id = ?`,
+            [hashedPassword, resetRecord.user_id]
+        );
+
+        // Invalidate all reset tokens for this user
+        await connection.execute(
+            `UPDATE PasswordResetTokens
+       SET used = 1
+       WHERE user_id = ? AND used = 0`,
+            [resetRecord.user_id]
+        );
+
+        // Save all changes together
+        await connection.commit();
+
+        return res.json({
+            success: true,
+            message: 'Password reset successfully! You can now log in.'
+        });
+
+    } catch (err) {
+        if (connection) {
+            await connection.rollback().catch(() => { });
+        }
+
+        console.error('ResetPassword error:', err.message);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Server error. Please try again.'
+        });
+
+    } finally {
+        if (connection) {
+            connection.release();
+        }
     }
-
-    if (newPassword.length < 6) {
-      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters.' });
-    }
-
-    const pool = getPool();
-
-    // Find valid, unused, non-expired token
-    const [tokens] = await pool.execute(
-      `SELECT prt.id, prt.user_id, prt.expires_at
-       FROM PasswordResetTokens prt
-       WHERE prt.token = ? AND prt.used = 0 AND prt.expires_at > NOW()`,
-      [token]
-    );
-
-    if (tokens.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'This reset link is invalid or has expired. Please request a new one.',
-      });
-    }
-
-    const resetRecord = tokens[0];
-
-    // Hash new password and update user
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    await pool.execute(
-      'UPDATE Users SET password = ?, updated_at = NOW() WHERE id = ?',
-      [hashedPassword, resetRecord.user_id]
-    );
-
-    // Mark token as used
-    await pool.execute(
-      'UPDATE PasswordResetTokens SET used = 1 WHERE id = ?',
-      [resetRecord.id]
-    );
-
-    res.json({ success: true, message: 'Password reset successfully! You can now log in.' });
-
-  } catch (err) {
-    console.error('ResetPassword error:', err.message);
-    res.status(500).json({ success: false, message: 'Server error. Please try again.' });
-  }
 }
+
 
 module.exports = { register, login, getMe, updateProfile, changePassword, forgotPassword, resetPassword };
