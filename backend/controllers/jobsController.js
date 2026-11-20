@@ -163,7 +163,7 @@ async function createJob(req, res) {
     }
 
     // Validate status
-    const jobStatus = status || 'Wishlist';
+    const jobStatus = status ;
     if (!VALID_STATUSES.includes(jobStatus)) {
       return res.status(400).json({
         success: false,
