@@ -411,18 +411,17 @@ export default function Dashboard() {
     return (
         <div className="jd-dashboard">
 
+           
             {/* Header */}
             <div className="jd-page-header">
                 <div>
-                    <h1>
-                        Good {getGreeting()}, {user?.name?.split(' ')[0] || 'there'}!
-                    </h1>
+                    <h1>Dashboard</h1>
                     <p>Here's your job search overview</p>
                 </div>
 
-                <Link to="/jobs/new" className="jd-add-job">
-                    + Add Application
-                </Link>
+                {/*<Link to="/jobs/new" className="jd-add-job">*/}
+                {/*    + Add Application*/}
+                {/*</Link>*/}
             </div>
 
             {error && (

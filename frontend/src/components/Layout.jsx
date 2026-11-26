@@ -2,7 +2,8 @@
 // Layout.jsx - The main app shell (sidebar + navbar + content)
 // ============================================================
 import React, { useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom';
+import { MdDashboard, MdWork, MdSchedule, MdPerson, MdCalendarToday } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext'
 
 // StatusBadge component
@@ -162,21 +163,14 @@ function Navbar({ onMenuToggle }) {
         <button className="menu-toggle" onClick={onMenuToggle} aria-label="Toggle menu">
           ☰
         </button>
-        <NavLink to="/dashboard" className="navbar-brand" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span className="brand-icon">💼</span>
-          <span>JobTracker</span>
-        </NavLink>
+        <span className="greeting-text">{(() => { const hour = new Date().getHours(); if (hour < 12) return 'Good morning'; if (hour < 18) return 'Good afternoon'; return 'Good evening'; })()}, {user?.name?.split(' ')[0] || 'User'}!</span>
       </div>
 
       <div className="navbar-right">
-        <NavLink to="/jobs/new" className="btn btn-primary btn-sm">
-          + Add Job
-        </NavLink>
+        
         <div className="navbar-user">
           <div className="user-avatar">{initials}</div>
-          <span className="text-sm font-medium" style={{ display: 'none' }}>
-            {user?.name}
-          </span>
+          <span className="text-sm font-medium">{user?.name}</span>
         </div>
       </div>
     </header>
