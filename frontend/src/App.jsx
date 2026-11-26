@@ -19,6 +19,7 @@ import Register from './pages/Register'
 
 // Pages (protected - require login)
 import Dashboard  from './pages/Dashboard'
+import Calendar from './pages/Calendar'
 import JobList    from './pages/JobList'
 import AddJob     from './pages/AddJob'
 import EditJob    from './pages/EditJob'
@@ -95,6 +96,7 @@ function App() {
           <Route path="/profile"         element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
           {/* Catch-all redirect */}
+          <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

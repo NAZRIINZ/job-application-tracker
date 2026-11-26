@@ -1,0 +1,126 @@
+
+.notification-btn {
+  position: relative;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.notification-btn .badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: white;
+  border-radius: 9999px;
+  padding: 2px 5px;
+  font-size: 10px;
+}
+
+.notification-dropdown {
+  position: absolute;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  width: 300px;
+  z-index: 1000;
+}
+
+    background: #ffffff;
+    border: 1px solid #e5eaf2;
+    border-radius: 14px;
+    padding: 20px;
+}
+
+    .notifications .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .notifications .title-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .notifications h3 {
+        margin: 0;
+        font-size: 17px;
+        color: #172554;
+    }
+
+    .notifications .badge {
+        background: #e0f2fe;
+        color: #0284c7;
+        padding: 3px 8px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+
+    .notifications .view-all {
+        color: #0284c7;
+        text-decoration: none;
+        font-size: 13px;
+    }
+
+    .notifications .list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .notifications .item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 0;
+        border-bottom: 1px solid #edf1f7;
+    }
+
+    .notifications .icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e0f2fe;
+        border-radius: 10px;
+        min-width: 40px;
+        height: 40px;
+    }
+
+    .notifications .content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+    }
+
+        .notifications .content .title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+    .notifications .detail,
+    .notifications .time {
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    .notifications .mark-all {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 16px;
+        border: none;
+        background: transparent;
+        color: #0284c7;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+    }

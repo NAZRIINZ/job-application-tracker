@@ -2,8 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { LoadingSpinner } from '../components/Layout'
+import JobProgress from '../components/JobProgress'
+import Notifications from '../components/Notifications'
 import API_URL from '../api'
-import './Dashboard.css'
+import './Dashboard.css' 
 import {
     CalendarDays,
     BriefcaseBusiness,
@@ -91,6 +93,64 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true)
     const [calendarLoading, setCalendarLoading] = useState(true)
     const [error, setError] = useState('')
+
+    // ----- Job Search Progress Targets -----
+
+    const applicationTargets = {
+        daily: 3,
+        weekly: 10,
+        monthly: 20
+    };
+
+    // ----- Notifications -----
+
+    const [unreadCount, setUnreadCount] = useState(0);
+    const markAllRead = () => setUnreadCount(0);
+    // ----- Calculate Daily, Weekly and Monthly Applications -----
+
+    const applicationCounts = useMemo(() => {
+
+        const todayKey = toDateKey(new Date());
+        const currentMonth = todayKey.slice(0, 7);
+
+        // Get Monday of current week
+        const weekStart = parseDate(todayKey);
+        const day = weekStart.getDay();
+
+        weekStart.setDate(
+            weekStart.getDate() - ((day + 6) % 7)
+        );
+
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+
+        const weekStartKey = toDateKey(weekStart);
+        const weekEndKey = toDateKey(weekEnd);
+
+        // Get actual application dates
+        const applicationDates = jobs
+            .filter(job =>
+                String(job.status || '').toLowerCase() !== 'wishlist'
+                && job.application_date
+            )
+            .map(job => toDateKey(job.application_date))
+            .filter(Boolean);
+
+        return {
+            daily: applicationDates.filter(
+                date => date === todayKey
+            ).length,
+
+            weekly: applicationDates.filter(
+                date => date >= weekStartKey && date <= weekEndKey
+            ).length,
+
+            monthly: applicationDates.filter(
+                date => date.startsWith(currentMonth)
+            ).length
+        };
+
+    }, [jobs]);
 
     const [activeFilter, setActiveFilter] = useState('all')
     const [calendarView, setCalendarView] = useState('month')
@@ -432,219 +492,47 @@ export default function Dashboard() {
 
             {/* Statistics */}
             <div className="jd-stats-grid">
-                {statCards.map(card => (
-                    <div
-                        className={`jd-stat-card ${card.color}`}
-                        key={card.label}
-                    >
-                        <div className="jd-stat-info">
-                            <p>{card.label}</p>
-                            <strong>{card.value}</strong>
-                        </div>
-                    </div>
-                ))}
-            </div>
-            {/* Main calendar layout */}
-            <div className="jd-main-grid">
-
-                {/* Calendar */}
-                <section className="jd-calendar-card">
-
-                    {/* Category filters */}
-                    <div className="jd-calendar-toolbar">
-                        <div className="jd-filter-tabs">
-                            {filters.map(filter => (
-                                <button
-                                    key={filter.id}
-                                    className={`jd-filter-btn ${activeFilter === filter.id ? 'active' : ''
-                                        }`}
-                                    onClick={() => selectFilter(filter.id)}
-                                >
-                                    {filter.id === 'all' && <CalendarDays />}
-                                    {filter.id === 'application' && <BriefcaseBusiness />}
-                                    {filter.id === 'interview' && <Users />}
-                                    {filter.id === 'followup' && <Clock />}
-                                    {filter.id === 'wishlist' && <Heart />}
-                                    {filter.label}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* View selector */}
-                        <div className="jd-view-tabs">
-                            {['month', 'week', 'list'].map(view => (
-                                <button
-                                    key={view}
-                                    className={calendarView === view ? 'active' : ''}
-                                    onClick={() => setCalendarView(view)}
-                                >
-                                    {view.charAt(0).toUpperCase() + view.slice(1)}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Month navigation */}
-                    <div className="jd-calendar-navigation">
-                        <div className="jd-month-controls">
-                            <button onClick={() => changeMonth(-1)} aria-label="Previous month">
-                                ‹
-                            </button>
-
-                            <button onClick={() => changeMonth(1)} aria-label="Next month">
-                                ›
-                            </button>
-
-                            <h2>{formatMonth(currentMonth)}</h2>
-                        </div>
-
-                        <button className="jd-today-btn" onClick={goToday}>
-                            Today
-                        </button>
-                    </div>
-
-                    {calendarLoading ? (
-                        <div className="jd-calendar-empty">Loading calendar events...</div>
-                    ) : calendarView === 'list' ? (
-
-                        /* List view */
-                        <div className="jd-list-view">
-                            {filteredEvents.length === 0 ? (
-                                <div className="jd-calendar-empty">
-                                    No events available.
-                                </div>
-                            ) : (
-                                filteredEvents.map(event => (
-                                    <button
-                                        key={event.id}
-                                        className={`jd-list-event ${event.type}`}
-                                        onClick={() => selectDate(event.date)}
-                                    >
-                                        <strong>{formatDate(event.date)}</strong>
-                                        <span>{event.title}</span>
-                                        <small>{event.subtitle}</small>
-                                        <span className="jd-event-type">
-                                            {event.type === 'application'
-                                                ? 'Job Application'
-                                                : event.type === 'followup'
-                                                    ? 'Follow-up'
-                                                    : event.type === 'interview'
-                                                        ? 'Interview'
-                                                        : 'Wishlist'}
-                                        </span>
-                                    </button>
-                                ))
-                            )}
-                        </div>
-
-                    ) : (
-
-                        /* Month and Week views */
-                        <div className="jd-calendar-grid">
-                            <div className="jd-weekdays">
-                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                                    <div key={day}>{day}</div>
-                                ))}
-                            </div>
-
-                            <div className="jd-calendar-days">
-                                {calendarDays.map(day => (
-                                    <button
-                                        key={day.key}
-                                        className={[
-                                            'jd-day-cell',
-                                            !day.isCurrentMonth ? 'outside' : '',
-                                            day.isToday ? 'today' : '',
-                                            selectedDate === day.key ? 'selected' : '',
-                                        ].join(' ')}
-                                        onClick={() => selectDate(day.key)}
-                                    >
-                                        <span className="jd-day-number">
-                                            {day.date.getDate()}
-                                        </span>
-
-                                        <div className="jd-day-events">
-                                            {day.events.slice(0, 3).map(event => (
-                                                <span
-                                                    key={event.id}
-                                                    className={`jd-calendar-event ${event.type}`}
-                                                    title={`${event.title} - ${event.subtitle}`}
-                                                    onClick={e => {
-                                                        e.stopPropagation()
-                                                        setSelectedDate(event.date)
-                                                        setSelectedEvent(event)
-                                                    }}
-                                                >
-                                                    {event.title}
-                                                </span>
-                                            ))}
-
-                                            {day.events.length > 3 && (
-                                                <small>+{day.events.length - 3} more</small>
-                                            )}
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Calendar legend */}
-                    <div className="jd-calendar-legend">
-                        <span><i className="application" /> Job Application</span>
-                        <span><i className="interview" /> Interview</span>
-                        <span><i className="followup" /> Follow-up</span>
-                        <span><i className="wishlist" /> Wishlist</span>
-                    </div>
-                </section>
-
-                {/* Selected date details */}
-                <aside className="jd-details-card">
-                    <div className="jd-details-heading">
-
-                        <h2>Selected Date Details</h2>
-                    </div>
-
-                    <h3>{formatDate(selectedDate)}</h3>
-
-                    <div className="jd-details-list">
-                        {selectedEvent ? (
-                            <EventDetails event={selectedEvent} />
-                        ) : selectedDateEvents.length > 0 ? (
-                            selectedDateEvents.map(event => (
-                                <EventDetails key={event.id} event={event} />
-                            ))
-                        ) : (
-                            <div className="jd-no-events">
-
-                                <strong>No events for this date</strong>
-                                <p>Select another date or add a new activity.</p>
-                            </div>
-                        )}
-                    </div>
-
-                    <Link to="/jobs/new" className="jd-add-event">
-                        + Add Event
-                    </Link>
-
-                    <Link to="/interviews" className="jd-manage-interviews">
-                        Manage Interviews →
-                    </Link>
-
-                    <div className="jd-pro-tip">
-                        <strong>💡 Pro Tip</strong>
-                        <p>
-                            Use the calendar filters to view applications, interviews,
-                            follow-ups and wishlist activities separately.
-                        </p>
-                    </div>
-                </aside>
+    {statCards.map(card => (
+        <div
+            className={`jd-stat-card ${card.color}`}
+            key={card.label}
+        >
+            <div className="jd-stat-info">
+                <p>{card.label}</p>
+                <strong>{card.value}</strong>
             </div>
         </div>
-    )
-}
+    ))}
+</div>
+            {/* Job Search Progress + Notifications Row */}
+            <div className="jd-dashboard-widgets-row">
 
-// ------------------------------------------------------------
+                {/* Left: Job Search Progress */}
+                <div className="jd-widget-progress">
+                   
+                    <JobProgress
+                        counts={applicationCounts}
+                        targets={applicationTargets}
+                    />
+                </div>
+
+                {/* Right: Notifications */}
+                <div className="jd-widget-notifications">
+                    <Notifications
+                        unreadCount={unreadCount}
+                        onMarkAll={markAllRead}
+                    />
+                </div>
+
+            </div>
+{/* Main calendar layout */}
+<div className="jd-main-grid">
+    {/* Calendar moved to a separate page */}
+    {/*<p>The calendar view has been moved to a separate page. Use the sidebar to access it.</p>*/}
+</div>
+        </div>
+    );
+}
 // Calendar event details
 // ------------------------------------------------------------
 

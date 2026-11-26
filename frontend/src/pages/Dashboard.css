@@ -806,4 +806,36 @@
         border-color: #9bb9ed;
     }
 
-    
+
+/* ========================================
+   Dashboard Progress + Notifications Row
+======================================== */
+
+.jd-dashboard-widgets-row {
+    display: grid;
+    grid-template-columns: minmax(0, 55fr) minmax(0, 45fr);
+    gap: 14px;
+    width: 100%;
+    align-items: stretch;
+    margin: 18px 0 24px;
+}
+
+.jd-widget-progress,
+.jd-widget-notifications {
+    min-width: 0;
+    width: 100%;
+}
+
+    .jd-widget-progress > *,
+    .jd-widget-notifications > * {
+        height: 100%;
+        box-sizing: border-box;
+    }
+
+/* Tablet and mobile */
+@media (max-width: 900px) {
+    .jd-dashboard-widgets-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
