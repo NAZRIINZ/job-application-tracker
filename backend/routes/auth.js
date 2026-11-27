@@ -7,17 +7,22 @@ const router  = express.Router();
 
 const authMiddleware = require('../middleware/auth');
 const {
-  register,
-  login,
-  getMe,
-  updateProfile,
-  changePassword,
-  forgotPassword,
-  resetPassword,
+    register,
+    verifyEmail,
+    resendVerificationEmail,
+    login,
+    getMe,
+    updateProfile,
+    changePassword,
+    forgotPassword,
+    resetPassword,
 } = require('../controllers/authController');
 
 // Public routes (no auth required)
-router.post('/register',        register);
+router.post('/register', register);
+router.get('/verify-email', verifyEmail);
+router.post('/resend-verification', resendVerificationEmail);
+
 router.post('/login',           login);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password',  resetPassword);

@@ -396,7 +396,16 @@ export default function Dashboard() {
         if (activeFilter === 'all') return events
 
         return events.filter(event => event.type === activeFilter)
-    }, [events, activeFilter])
+    }, [events, activeFilter]);
+
+    // Upcoming events (interview & follow‑up) – next two future events
+    const upcomingEvents = useMemo(() => {
+        const todayKey = toDateKey(new Date());
+        const future = filteredEvents.filter(event =>
+            (event.type === 'interview' || event.type === 'followup') && event.date >= todayKey
+        );
+        return future.slice(0, 2);
+    }, [filteredEvents]);
 
     const selectedDateEvents = filteredEvents.filter(
         event => event.date === selectedDate
@@ -542,20 +551,46 @@ export default function Dashboard() {
                 </div>
             )}
 
-            {/* Statistics */}
-            <div className="jd-stats-grid">
-    {statCards.map(card => (
-        <div
-            className={`jd-stat-card ${card.color}`}
-            key={card.label}
-        >
-            <div className="jd-stat-info">
-                <p>{card.label}</p>
-                <strong>{card.value}</strong>
+            {/* Statistics + Calendar Summary */}
+            <div className="jd-stats-calendar-grid">
+                {/* Left: Statistics (2 columns x 3 rows) */}
+                <div className="jd-stats-grid">
+                    {statCards.map(card => (
+                        <div
+                            className={`jd-stat-card ${card.color}`}
+                            key={card.label}
+                        >
+                            <div className="jd-stat-info">
+                                <p>{card.label}</p>
+                                <strong>{card.value}</strong>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Right: Calendar Summary */}
+                <div className="jd-calendar-summary-card">
+                    <div className="jd-summary-header">
+                        <div className="jd-summary-title">
+                            <CalendarDays size={20} /> Calendar Summary
+                        </div>
+                        <Link to="/calendar" className="jd-view-calendar">View Calendar →</Link>
+                    </div>
+                    <div className="jd-summary-count">{upcomingEvents.length}</div>
+                    <div className="jd-summary-label">Upcoming Events</div>
+                    <hr className="jd-summary-divider" />
+                    <div className="jd-upcoming-events">
+                        {upcomingEvents.map(event => (
+                            <div key={event.id} className="jd-upcoming-item">
+                                <span className={`jd-upcoming-dot ${event.type}`} />
+                                <span className="jd-upcoming-type">{event.type.charAt(0).toUpperCase() + event.type.slice(1)}</span>
+                                <span className="jd-upcoming-date">{formatDate(event.date)}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
-        </div>
-    ))}
-</div>
+
             {/* Job Search Progress + Notifications Row */}
             <div className="jd-dashboard-widgets-row">
 
