@@ -1,18 +1,19 @@
-
 import React, { useState } from 'react';
 import './JobProgress.css';
+import PeriodToggle from './PeriodToggle';
 
 export default function JobProgress({ counts, targets }) {
-    const [period, setPeriod] = useState('monthly');
+    const [period, setPeriod] = useState('Month');
 
-    const periodLabels = {
-        daily: 'Today',
-        weekly: 'This Week',
-        monthly: 'This Month'
-    };
+    // Convert the selected button into the keys used by Dashboard.jsx
+    const periodKey = {
+        Day: 'daily',
+        Week: 'weekly',
+        Month: 'monthly'
+    }[period];
 
-    const current = counts?.[period] ?? 0;
-    const target = targets?.[period] ?? 0;
+    const current = counts?.[periodKey] ?? 0;
+    const target = targets?.[periodKey] ?? 0;
 
     const percent = target > 0
         ? Math.min(100, Math.round((current / target) * 100))
@@ -20,25 +21,31 @@ export default function JobProgress({ counts, targets }) {
 
     const remaining = Math.max(0, target - current);
 
-    const radius = 52;
-    const stroke = 10;
+    const periodText = {
+        Day: 'today',
+        Week: 'this week',
+        Month: 'this month'
+    };
+
+    const radius = 76;
+    const stroke = 12;
     const normalizedRadius = radius - stroke / 2;
     const circumference = normalizedRadius * 2 * Math.PI;
+
     const strokeDashoffset =
         circumference - (percent / 100) * circumference;
 
-    const gradientId = 'progress-gradient';
+    const gradientId = 'job-progress-gradient';
 
     return (
         <section className="card job-progress">
 
-            {/* Header */}
-            <div className="card-header">
-
+            {/* Header Title */}
+            <div className="progress-header">
                 <div className="title-left">
                     <svg
-                        width="20"
-                        height="20"
+                        width="30"
+                        height="30"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="#0EA5E9"
@@ -56,25 +63,19 @@ export default function JobProgress({ counts, targets }) {
 
                     <h3>Job Search Progress</h3>
                 </div>
-
-                <div className="title-right">
-                    <select
-                        className="time-selector"
-                        value={period}
-                        onChange={(e) => setPeriod(e.target.value)}
-                    >
-                        <option value="daily">Today</option>
-                        <option value="weekly">This Week</option>
-                        <option value="monthly">This Month</option>
-                    </select>
-                </div>
-
             </div>
+
+            {/* Centered Period Toggle */}
+            <div className="progress-period-row">
+                <PeriodToggle selected={period} onChange={setPeriod} />
+            </div>
+
+            <div className="progress-divider" />
 
             {/* Progress Content */}
             <div className="progress-content">
 
-                {/* Donut Chart */}
+                {/* Circular Progress */}
                 <svg
                     height={radius * 2}
                     width={radius * 2}
@@ -85,7 +86,7 @@ export default function JobProgress({ counts, targets }) {
                             id={gradientId}
                             x1="0%"
                             y1="0%"
-                            x2="0%"
+                            x2="100%"
                             y2="100%"
                         >
                             <stop offset="0%" stopColor="#2DD4BF" />
@@ -110,7 +111,7 @@ export default function JobProgress({ counts, targets }) {
                         strokeDasharray={`${circumference} ${circumference}`}
                         strokeDashoffset={strokeDashoffset}
                         style={{
-                            transition: 'stroke-dashoffset 0.35s'
+                            transition: 'stroke-dashoffset 0.4s ease'
                         }}
                         r={normalizedRadius}
                         cx={radius}
@@ -121,10 +122,10 @@ export default function JobProgress({ counts, targets }) {
                     <text
                         x="50%"
                         y="50%"
-                        dy="0.3em"
+                        dy="0.35em"
                         textAnchor="middle"
                         fill="#1E2952"
-                        fontSize="22"
+                        fontSize="27"
                         fontWeight="bold"
                     >
                         {percent}%
@@ -135,8 +136,7 @@ export default function JobProgress({ counts, targets }) {
                 <div className="linear-section">
 
                     <div className="headline">
-                        <strong>{current} of {target}</strong>
-                        {' '}Applications
+                        {current} of {target} Applications
                     </div>
 
                     <div className="linear-bar-bg">
@@ -149,18 +149,15 @@ export default function JobProgress({ counts, targets }) {
                     <div className="subcaption">
                         <span className="dot" />
 
-                        <span className="text">
+                        <span>
                             {remaining > 0
-                                ? `${remaining} applications remaining ${periodLabels[period].toLowerCase()}`
-                                : 'Goal achieved! Great work!'
-                            }
+                                ? `${remaining} applications remaining ${periodText[period]}`
+                                : 'Goal achieved! Great work!'}
                         </span>
                     </div>
 
                 </div>
-
             </div>
-
         </section>
     );
 }

@@ -1,5 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { fetchNotifications, markAllNotificationsRead
+} from './notificationService';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Notifications from './Notifications';
@@ -185,13 +187,54 @@ function Sidebar({ isOpen, onClose }) {
     );
 }
 
+
 // Top Navbar
 function Navbar({ onMenuToggle }) {
     const { user } = useAuth();
-    const [showNotifications, setShowNotifications] = useState(false);
 
-    // Temporary placeholder until connected to real notification data
-    const unreadCount = 3;
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    // Fetch the actual unread notification count
+    const loadUnreadCount = useCallback(async () => {
+        const notifications = await fetchNotifications();
+
+        const count = notifications.filter(
+            notification => !notification.read
+        ).length;
+
+        setUnreadCount(count);
+    }, []);
+
+    // Load notifications when Navbar mounts.
+    // Refresh every 30 seconds to check for new notifications.
+    useEffect(() => {
+        loadUnreadCount();
+
+        const interval = setInterval(() => {
+            loadUnreadCount();
+        }, 30000);
+
+        return () => clearInterval(interval);
+    }, [loadUnreadCount]);
+
+    // Open notification panel and mark notifications as read
+    const handleNotificationClick = async () => {
+        if (showNotifications) {
+            setShowNotifications(false);
+            return;
+        }
+
+        // Open the panel
+        setShowNotifications(true);
+
+        // Mark notifications as read in the database
+        const success = await markAllNotificationsRead();
+
+        if (success) {
+            setUnreadCount(0);
+        }
+    };
 
     const initials = user?.name
         ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
@@ -225,9 +268,7 @@ function Navbar({ onMenuToggle }) {
                 <div className="notification-wrapper">
                     <button
                         className="notification-btn"
-                        onClick={() =>
-                            setShowNotifications(prev => !prev)
-                        }
+                        onClick={handleNotificationClick}
                         aria-label="Notifications"
                     >
                         <Bell size={20} color="#0EA5E9" />
@@ -242,8 +283,7 @@ function Navbar({ onMenuToggle }) {
                     {showNotifications && (
                         <div className="notification-dropdown">
                             <Notifications
-                                unreadCount={unreadCount}
-                                onMarkAll={() => console.log('Mark all read')}
+                               
                             />
                         </div>
                     )}

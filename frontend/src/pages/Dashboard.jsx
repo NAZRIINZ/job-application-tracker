@@ -94,7 +94,62 @@ export default function Dashboard() {
     const [calendarLoading, setCalendarLoading] = useState(true)
     const [error, setError] = useState('')
 
-    // ----- Job Search Progress Targets -----
+    // ----- Period toggle and counts -----
+  const [period, setPeriod] = useState('Day'); // Day | Week | Month
+  const [periodStats, setPeriodStats] = useState({ total: 0, new: 0 });
+
+  // Compute stats whenever jobs or period changes
+  useEffect(() => {
+    if (!jobs.length) {
+      setPeriodStats({ total: 0, new: 0 });
+      return;
+    }
+    const now = new Date();
+    const sameDay = (d1, d2) =>
+      d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate();
+
+    if (period === 'Day') {
+      const todayJobs = jobs.filter(j => sameDay(new Date(j.application_date || j.created_at), now));
+      setPeriodStats({
+        total: todayJobs.length,
+        new: todayJobs.filter(j => !j.read).length,
+      });
+      return;
+    }
+    if (period === 'Week') {
+      const start = new Date(now);
+      const day = start.getDay(); // 0=Sun
+      const diff = (day + 6) % 7; // days since Monday
+      start.setDate(start.getDate() - diff);
+      start.setHours(0,0,0,0);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 6);
+      end.setHours(23,59,59,999);
+      const weekJobs = jobs.filter(j => {
+        const d = new Date(j.application_date || j.created_at);
+        return d >= start && d <= end;
+      });
+      setPeriodStats({
+        total: weekJobs.length,
+        new: weekJobs.filter(j => !j.read).length,
+      });
+      return;
+    }
+    if (period === 'Month') {
+      const month = now.getMonth();
+      const year = now.getFullYear();
+      const monthJobs = jobs.filter(j => {
+        const d = new Date(j.application_date || j.created_at);
+        return d.getMonth() === month && d.getFullYear() === year;
+      });
+      setPeriodStats({
+        total: monthJobs.length,
+        new: monthJobs.filter(j => !j.read).length,
+      });
+    }
+  }, [jobs, period]);
 
     const applicationTargets = {
         daily: 3,
@@ -102,10 +157,7 @@ export default function Dashboard() {
         monthly: 20
     };
 
-    // ----- Notifications -----
 
-    const [unreadCount, setUnreadCount] = useState(0);
-    const markAllRead = () => setUnreadCount(0);
     // ----- Calculate Daily, Weekly and Monthly Applications -----
 
     const applicationCounts = useMemo(() => {
@@ -519,8 +571,8 @@ export default function Dashboard() {
                 {/* Right: Notifications */}
                 <div className="jd-widget-notifications">
                     <Notifications
-                        unreadCount={unreadCount}
-                        onMarkAll={markAllRead}
+                        showAll={true}
+                        maxItems={3}
                     />
                 </div>
 

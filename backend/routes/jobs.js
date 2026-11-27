@@ -14,12 +14,17 @@ const {
   updateJob,
   deleteJob,
   getStats,
+  getNotifications,
+  markAllNotificationsRead,
+
 } = require('../controllers/jobsController');
 
 // Get dashboard statistics
 // This route must come before /:id
 router.get('/stats', authMiddleware, getStats);
-
+// Get user notifications
+router.get('/notifications', authMiddleware, getNotifications);
+router.patch('/notifications/read-all', authMiddleware, markAllNotificationsRead);
 // GET    /api/jobs      - Get all jobs 
 // POST   /api/jobs      - Create new job
 router.get('/',    authMiddleware, getJobs);

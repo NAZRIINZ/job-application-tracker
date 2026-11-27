@@ -7,7 +7,13 @@
 const { getPool } = require('../config/db');
 const { sendStatusUpdateEmail } = require('../services/emailService');
 
-// Valid status values
+// Helper – create a notification row
+async function addNotification(pool, userId, title, detail = null, type = null) {
+  await pool.execute(
+    `INSERT INTO Notifications (user_id, title, detail, type) VALUES (?, ?, ?, ?)`,
+    [userId, title, detail, type]
+  );
+}
 const VALID_STATUSES = ['Wishlist', 'Applied', 'Interview', 'Offer Received', 'Rejected'];
 
 // ============================================================
@@ -215,6 +221,18 @@ async function createJob(req, res) {
        WHERE id = ?`,
       [newJobId]
     );
+      // Create notification when a new application is added
+      try {
+          await addNotification(
+              pool,
+              req.user.id,
+              'New job application added',
+              `You added an application for ${company_name.trim()} - ${job_title.trim()}`,
+              'application_added'
+          );
+      } catch (notificationError) {
+          console.error('Notification creation error:', notificationError.message);
+      }
 
     res.status(201).json({
       success: true,
@@ -351,6 +369,28 @@ async function updateJob(req, res) {
             ]
         );
 
+        // Create notification when an application is updated
+        try {
+            if (oldStatus !== newStatus) {
+                await addNotification(
+                    pool,
+                    req.user.id,
+                    'Application status updated',
+                    `${company_name.trim()} - Status changed from ${oldStatus} to ${newStatus}`,
+                    'status_changed'
+                );
+            } else {
+                await addNotification(
+                    pool,
+                    req.user.id,
+                    'Job application updated',
+                    `You updated the application details for ${company_name.trim()}`,
+                    'application_updated'
+                );
+            }
+        } catch (notificationError) {
+            console.error('Notification creation error:', notificationError.message);
+        }
         // Send status update email if the status has changed
         if (oldStatus !== newStatus) {
             const [userRows] = await pool.execute(
@@ -485,5 +525,78 @@ async function getStats(req, res) {
     res.status(500).json({ success: false, message: 'Failed to fetch stats.' });
   }
 }
+
+
+// ============================================================
+// GET NOTIFICATIONS - GGET /api/jobs/notifications
+// ============================================================
+async function getNotifications(req, res) {
+    try {
+        const pool = getPool();
+
+        const [notifications] = await pool.execute(
+            `SELECT
+                id,
+                title,
+                detail,
+                type,
+                is_read,
+                created_at
+             FROM Notifications
+             WHERE user_id = ?
+             ORDER BY created_at DESC
+             LIMIT 50`,
+            [req.user.id]
+        );
+
+        const unreadCount = notifications.filter(
+            notification => !notification.is_read
+        ).length;
+
+        return res.json({
+            success: true,
+            notifications,
+            unreadCount
+        });
+
+    } catch (err) {
+        console.error('GetNotifications error:', err.message);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch notifications.'
+        });
+    }
+}
+// ============================================================
+// MARK ALL NOTIFICATIONS AS READ - PATCH /api/jobs/notifications/read-all
+// ============================================================
+async function markAllNotificationsRead(req, res) {
+    try {
+        const pool = getPool();
+
+        await pool.execute(
+            `UPDATE Notifications
+             SET is_read = TRUE
+             WHERE user_id = ?`,
+            [req.user.id]
+        );
+
+        return res.json({
+            success: true,
+            message: 'All notifications marked as read.'
+        });
+
+    } catch (err) {
+        console.error('MarkAllNotificationsRead error:', err.message);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to mark notifications as read.'
+        });
+    }
+}
+
 // Export controller functions
-module.exports = { getJobs, getJobById, createJob, updateJob, deleteJob, getStats };
+module.exports = {
+    getJobs, getJobById, createJob, updateJob, deleteJob, getStats, getNotifications, markAllNotificationsRead };

@@ -1,37 +1,39 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Notifications.css';
-import { Bell, Check } from 'lucide-react';
-import { notifications as initialNotifications } from './notificationsData';
+import { Bell } from 'lucide-react';
+import { fetchNotifications } from './notificationService';
 
 export default function Notifications({
-    unreadCount,
-    onMarkAll,
-    showAll = true
+    showAll = true,
+    maxItems = null
 }) {
-    const [notifications, setNotifications] = useState(initialNotifications);
+    const [notifications, setNotifications] = useState([]);
 
-    const handleMarkAll = () => {
-        const updated = notifications.map(n => ({
-            ...n,
-            read: true
-        }));
+    // Load notifications from backend
+    useEffect(() => {
+        let mounted = true;
 
-        setNotifications(updated);
+        fetchNotifications()
+            .then(data => {
+                if (mounted) {
+                    setNotifications(data);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load notifications:', err);
+            });
 
-        if (onMarkAll) {
-            onMarkAll();
-        }
-    };
+        return () => {
+            mounted = false;
+        };
+    }, []);
 
-    const filtered = showAll
-        ? notifications
-        : notifications.filter(n => !n.read);
-
+    // Notification icons
     const iconMap = {
         Calendar: (
-            <svg width="20" height="20" viewBox="0 0 24 24"
-                fill="none" stroke="#0284C7" strokeWidth="2"
+            <svg width="22" height="22" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" strokeWidth="2"
                 strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
@@ -41,8 +43,8 @@ export default function Notifications({
         ),
 
         RefreshCw: (
-            <svg width="20" height="20" viewBox="0 0 24 24"
-                fill="none" stroke="#0284C7" strokeWidth="2"
+            <svg width="22" height="22" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" strokeWidth="2"
                 strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="23 4 23 10 17 10" />
                 <polyline points="1 20 1 14 7 14" />
@@ -52,8 +54,8 @@ export default function Notifications({
         ),
 
         Info: (
-            <svg width="20" height="20" viewBox="0 0 24 24"
-                fill="none" stroke="#0284C7" strokeWidth="2"
+            <svg width="22" height="22" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" strokeWidth="2"
                 strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="16" x2="12" y2="12" />
@@ -62,66 +64,62 @@ export default function Notifications({
         )
     };
 
+    // Filter notifications
+    let filtered = showAll
+        ? notifications
+        : notifications.filter(n => !n.read);
+
+    if (maxItems !== null) {
+        filtered = filtered.slice(0, maxItems);
+    }
+
     return (
         <section className="card notifications">
 
+            {/* Header */}
             <div className="card-header">
                 <div className="title-left">
-                    <Bell size={20} color="#0EA5E9" />
-
+                    <Bell size={21} />
                     <h3>Notifications</h3>
-
-                    {unreadCount > 0 && (
-                        <span className="badge" aria-label="unread count">
-                            {unreadCount}
-                        </span>
-                    )}
                 </div>
-
-                <a
-                    href="#"
-                    className="view-all"
-                    onClick={(e) => e.preventDefault()}
-                >
-                    View All →
-                </a>
             </div>
 
+            {/* Notification list */}
             <ul className="list">
-                {filtered.map(n => (
-                    <li key={n.id} className="item">
+                {filtered.length > 0 ? (
+                    filtered.map(n => (
+                        <li
+                            key={n.id}
+                            className={`item ${!n.read ? 'unread' : ''}`}
+                        >
+                            <div className="icon">
+                                {iconMap[n.icon] || iconMap.Info}
+                            </div>
 
-                        <div className="icon">
-                            {iconMap[n.icon]}
-                        </div>
-
-                        <div className="content">
-                            <span className="title">
-                                {n.title}
-                            </span>
-
-                            {n.detail && (
-                                <span className="detail">
-                                    {n.detail}
+                            <div className="content">
+                                <span className="title">
+                                    {n.title}
                                 </span>
-                            )}
-                        </div>
 
-                        <span className="time">
-                            {n.time}
-                        </span>
+                                {n.detail && (
+                                    <span className="detail">
+                                        {n.detail}
+                                    </span>
+                                )}
+                            </div>
 
+                            <span className="time">
+                                {n.time}
+                            </span>
+                        </li>
+                    ))
+                ) : (
+                    <li className="empty-notifications">
+                        <Bell size={25} />
+                        <p>No notifications yet</p>
                     </li>
-                ))}
+                )}
             </ul>
-
-            <button
-                className="mark-all"
-                onClick={handleMarkAll}
-            >
-                <Check size={16} color="#0284C7" />
-                Mark all as read
-            </button>
 
         </section>
     );
