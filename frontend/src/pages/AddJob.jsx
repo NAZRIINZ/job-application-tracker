@@ -5,6 +5,7 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import API_URL from '../api'
+import { FileText, Save, CheckCircle, AlertTriangle } from 'lucide-react'
 
 const STATUS_OPTIONS = ['Wishlist', 'Applied', 'Interview', 'Offer Received', 'Rejected']
 

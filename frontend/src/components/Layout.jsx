@@ -5,18 +5,21 @@ import { fetchNotifications, markAllNotificationsRead
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Notifications from './Notifications';
-import { Bell } from 'lucide-react';
+import {
+    Bell, LayoutDashboard, Briefcase, CalendarDays, CalendarCheck,
+    User, Trash2, X, LogOut, Menu, AlertTriangle, CheckCircle
+} from 'lucide-react';
 
 // Navigation items
 const NAV_ITEMS = [
-    { to: '/dashboard', icon: '📊', label: 'Dashboard' },
-    { to: '/jobs', icon: '💼', label: 'My Applications' },
-    { to: '/interviews', icon: '🗓️', label: 'Interviews' },
-    { to: '/calendar', icon: '📅', label: 'Calendar' }
+    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/jobs',      icon: Briefcase,       label: 'My Applications' },
+    { to: '/interviews',icon: CalendarCheck,   label: 'Interviews' },
+    { to: '/calendar',  icon: CalendarDays,    label: 'Calendar' },
 ];
 
 const NAV_BOTTOM = [
-    { to: '/profile', icon: '👤', label: 'Profile Settings' }
+    { to: '/profile', icon: User, label: 'Profile Settings' },
 ];
 
 // Status Badge
@@ -50,7 +53,7 @@ export function ConfirmModal({
     return (
         <div className="modal-overlay" onClick={onCancel}>
             <div className="modal" onClick={e => e.stopPropagation()}>
-                <div className="modal-icon">🗑️</div>
+                <div className="modal-icon"><Trash2 size={28} color="#ef4444" /></div>
 
                 <h3 className="modal-title">{title}</h3>
                 <p className="modal-desc">{description}</p>
@@ -110,24 +113,22 @@ function Sidebar({ isOpen, onClose }) {
 
             <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
-                    <NavLink
-                        to="/dashboard"
-                        className="sidebar-logo"
-                        onClick={onClose}
-                    >
-                        <span className="logo-icon">💼</span>
+                    <NavLink to="/dashboard" className="sidebar-logo" onClick={onClose}>
+                        <Briefcase size={22} color="#4f46e5" />
                         <span>JobTracker</span>
                     </NavLink>
 
                     <button className="sidebar-close" onClick={onClose}>
-                        ✕
+                        <X size={18} />
                     </button>
                 </div>
 
                 <nav className="sidebar-nav">
                     <p className="nav-section-title">Menu</p>
 
-                    {NAV_ITEMS.map(item => (
+                    {NAV_ITEMS.map(item => {
+                        const Icon = item.icon;
+                        return (
                         <NavLink
                             key={item.to}
                             to={item.to}
@@ -136,14 +137,17 @@ function Sidebar({ isOpen, onClose }) {
                             }
                             onClick={onClose}
                         >
-                            <span className="nav-icon">{item.icon}</span>
+                            <span className="nav-icon"><Icon size={18} /></span>
                             <span>{item.label}</span>
                         </NavLink>
-                    ))}
+                        );
+                    })}
 
                     <p className="nav-section-title">Account</p>
 
-                    {NAV_BOTTOM.map(item => (
+                    {NAV_BOTTOM.map(item => {
+                        const Icon = item.icon;
+                        return (
                         <NavLink
                             key={item.to}
                             to={item.to}
@@ -152,10 +156,11 @@ function Sidebar({ isOpen, onClose }) {
                             }
                             onClick={onClose}
                         >
-                            <span className="nav-icon">{item.icon}</span>
+                            <span className="nav-icon"><Icon size={18} /></span>
                             <span>{item.label}</span>
                         </NavLink>
-                    ))}
+                        );
+                    })}
                 </nav>
 
                 <div className="sidebar-footer">
@@ -179,7 +184,7 @@ function Sidebar({ isOpen, onClose }) {
                     </div>
 
                     <button className="logout-btn" onClick={handleLogout}>
-                        🚪 Logout
+                        <LogOut size={16} style={{ marginRight: 6 }} /> Logout
                     </button>
                 </div>
             </aside>
@@ -256,12 +261,17 @@ function Navbar({ onMenuToggle }) {
                     onClick={onMenuToggle}
                     aria-label="Toggle menu"
                 >
-                    ☰
+                    <Menu size={22} />
                 </button>
 
-                <span className="greeting-text">
-                    {greeting}, {user?.name?.split(' ')[0] || 'User'}!
-                </span>
+                <div className="greeting-block">
+                    <span className="greeting-text">
+                        {greeting},&nbsp;
+                    </span>
+                    <span className="greeting-name">
+                        {user?.name?.split(' ')[0] || 'User'}!
+                    </span>
+                </div>
             </div>
 
             <div className="navbar-right">
@@ -274,7 +284,7 @@ function Navbar({ onMenuToggle }) {
                         <Bell size={20} color="#0EA5E9" />
 
                         {unreadCount > 0 && (
-                            <span className="badge" aria-label="unread count">
+                            <span className="notif-badge" aria-label="unread count">
                                 {unreadCount}
                             </span>
                         )}
@@ -291,8 +301,8 @@ function Navbar({ onMenuToggle }) {
 
                 <div className="navbar-user">
                     <div className="user-avatar">{initials}</div>
-                    <span className="text-sm font-medium">
-                        {user?.name}
+                    <span className="navbar-username">
+                        {user?.name?.split(' ')[0] || user?.name}
                     </span>
                 </div>
             </div>

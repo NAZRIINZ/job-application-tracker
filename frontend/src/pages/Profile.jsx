@@ -4,6 +4,7 @@
 import React, { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import API_URL from '../api'
+import { User, Lock, Key, Save, CheckCircle, AlertTriangle } from 'lucide-react'
 export default function Profile() {
   const { user, getAuthHeaders, updateUser } = useAuth()
 

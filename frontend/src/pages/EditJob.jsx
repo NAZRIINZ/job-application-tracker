@@ -6,6 +6,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { LoadingSpinner } from '../components/Layout'
 import API_URL from '../api'
+import { Pencil, Save, CheckCircle, AlertTriangle } from 'lucide-react'
 
 
 const STATUS_OPTIONS = ['Wishlist', 'Applied', 'Interview', 'Offer Received', 'Rejected']
