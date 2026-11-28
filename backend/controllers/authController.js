@@ -77,11 +77,11 @@ async function register(req, res) {
     const hashedToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
 
     // Remove any previous verification tokens for this user
-    await pool.execute('DELETE FROM EmailVerificationTokens WHERE user_id = ?', [newUserId]);
+    await pool.execute('DELETE FROM emailverificationtokens WHERE user_id = ?', [newUserId]);
 
     // Store token with a 24‑hour expiry
     await pool.execute(
-      `INSERT INTO EmailVerificationTokens (user_id, token, expires_at)\n        VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))`,
+      `INSERT INTO emailverificationtokens (user_id, token, expires_at)\n        VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))`,
       [newUserId, hashedToken]
     );
 
@@ -98,7 +98,7 @@ async function register(req, res) {
 
     // If email sending fails, clean up the pending account
     if (!emailSent) {
-      await pool.execute('DELETE FROM EmailVerificationTokens WHERE user_id = ?', [newUserId]);
+      await pool.execute('DELETE FROM emailverificationtokens WHERE user_id = ?', [newUserId]);
       await pool.execute('DELETE FROM Users WHERE id = ? AND email_verified = 0', [newUserId]);
       return res.status(500).json({
         success: false,
@@ -141,7 +141,7 @@ async function verifyEmail(req, res) {
 
     // Find a valid, non‑expired verification token
     const [tokens] = await pool.execute(
-      `SELECT evt.id, evt.user_id\n        FROM EmailVerificationTokens evt\n        WHERE evt.token = ? AND evt.expires_at > NOW()`,
+      `SELECT evt.id, evt.user_id\n        FROM emailverificationtokens evt\n        WHERE evt.token = ? AND evt.expires_at > NOW()`,
       [hashedToken]
     );
 
@@ -158,7 +158,7 @@ async function verifyEmail(req, res) {
     await pool.execute('UPDATE Users SET email_verified = 1 WHERE id = ?', [verificationRecord.user_id]);
 
     // Delete the token so it cannot be reused
-    await pool.execute('DELETE FROM EmailVerificationTokens WHERE id = ?', [verificationRecord.id]);
+    await pool.execute('DELETE FROM emailverificationtokens WHERE id = ?', [verificationRecord.id]);
 
     // Send welcome email after successful verification
     const [users] = await pool.execute('SELECT id, name, email FROM Users WHERE id = ?', [verificationRecord.user_id]);
@@ -219,9 +219,9 @@ async function resendVerificationEmail(req, res) {
     const hashedToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
 
     // Remove previous tokens and store the new one (24‑hour expiry)
-    await pool.execute('DELETE FROM EmailVerificationTokens WHERE user_id = ?', [user.id]);
+    await pool.execute('DELETE FROM emailverificationtokens WHERE user_id = ?', [user.id]);
     await pool.execute(
-      `INSERT INTO EmailVerificationTokens (user_id, token, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))`,
+      `INSERT INTO emailverificationtokens (user_id, token, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))`,
       [user.id, hashedToken]
     );
 
