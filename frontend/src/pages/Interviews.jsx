@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import API_URL from '../api'
 
 import { LoadingSpinner } from '../components/Layout';
+import { AlertTriangle, Pencil, Save } from 'lucide-react';
 
 
 const INTERVIEW_TYPES  = ['Phone Screen', 'Technical', 'HR Round', 'Final Round', 'On-site', 'Video Call', 'Other']

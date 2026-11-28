@@ -1,89 +1,74 @@
 // ============================================================
 // Register.jsx - Registration page
 // ============================================================
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import API_URL from '../api'
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import API_URL from '../api';
 
 export default function Register() {
-  const navigate  = useNavigate()
-  const { login } = useAuth()
+  const navigate = useNavigate(); // retained (not used) to avoid breaking existing imports
+  const { login } = useAuth(); // retained for context consistency
 
-  const [form, setForm]         = useState({ name: '', email: '', password: '', confirmPassword: '' })
-  const [errors, setErrors]     = useState({})
-  const [apiError, setApiError] = useState('')
-  const [loading, setLoading]   = useState(false)
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [successMsg, setSuccessMsg] = useState(''); // success banner after registration
 
   function handleChange(e) {
-    const { name, value } = e.target
-    setForm(prev => ({ ...prev, [name]: value }))
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }))
-    setApiError('')
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+    setApiError('');
   }
 
   function validate() {
-    const newErrors = {}
-
-    if (!form.name.trim()) {
-      newErrors.name = 'Full name is required'
-    } else if (form.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters'
-    }
-
-    if (!form.email.trim()) {
-      newErrors.email = 'Email is required'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      newErrors.email = 'Please enter a valid email'
-    }
-
-    if (!form.password) {
-      newErrors.password = 'Password is required'
-    } else if (form.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters'
-    }
-
-    if (!form.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password'
-    } else if (form.password !== form.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match'
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    const newErrors = {};
+    if (!form.name.trim()) newErrors.name = 'Full name is required';
+    else if (form.name.trim().length < 2) newErrors.name = 'Name must be at least 2 characters';
+    if (!form.email.trim()) newErrors.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = 'Please enter a valid email';
+    if (!form.password) newErrors.password = 'Password is required';
+    else if (form.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    if (!form.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
+    else if (form.password !== form.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   }
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    if (!validate()) return
+    e.preventDefault();
+    if (!validate()) return;
 
-    setLoading(true)
-    setApiError('')
+    setLoading(true);
+    setApiError('');
+    setSuccessMsg('');
 
     try {
-        
-       const response = await fetch(`${API_URL}/api/auth/register`, {
-        method:  'POST',
+      const response = await fetch(`${API_URL}/api/auth/register`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          name:     form.name.trim(),
-          email:    form.email.trim(),
+        body: JSON.stringify({
+          name: form.name.trim(),
+          email: form.email.trim(),
           password: form.password,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.success) {
-        login(data.token, data.user)
-        navigate('/dashboard')
+        // Do NOT auto-login or navigate. Show a friendly success banner.
+        setSuccessMsg(data.message || 'Registration successful! Please check your inbox and verify your email before signing in.');
+        setForm({ name: '', email: '', password: '', confirmPassword: '' });
       } else {
-        setApiError(data.message || 'Registration failed.')
+        setApiError(data.message || 'Registration failed.');
       }
     } catch (err) {
-      setApiError('Cannot connect to server. Is the backend running?')
+      setApiError('Cannot connect to server. Is the backend running?');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -102,10 +87,9 @@ export default function Register() {
         )}
 
         <form onSubmit={handleSubmit} noValidate>
+          {/* Name */}
           <div className="form-group">
-            <label className="form-label" htmlFor="name">
-              Full Name <span className="required">*</span>
-            </label>
+            <label className="form-label" htmlFor="name">Full Name <span className="required">*</span></label>
             <input
               id="name"
               type="text"
@@ -119,10 +103,9 @@ export default function Register() {
             {errors.name && <p className="form-error">⚠ {errors.name}</p>}
           </div>
 
+          {/* Email */}
           <div className="form-group">
-            <label className="form-label" htmlFor="email">
-              Email Address <span className="required">*</span>
-            </label>
+            <label className="form-label" htmlFor="email">Email Address <span className="required">*</span></label>
             <input
               id="email"
               type="email"
@@ -136,11 +119,10 @@ export default function Register() {
             {errors.email && <p className="form-error">⚠ {errors.email}</p>}
           </div>
 
+          {/* Passwords */}
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label" htmlFor="password">
-                Password <span className="required">*</span>
-              </label>
+              <label className="form-label" htmlFor="password">Password <span className="required">*</span></label>
               <input
                 id="password"
                 type="password"
@@ -153,11 +135,8 @@ export default function Register() {
               />
               {errors.password && <p className="form-error">⚠ {errors.password}</p>}
             </div>
-
             <div className="form-group">
-              <label className="form-label" htmlFor="confirmPassword">
-                Confirm Password <span className="required">*</span>
-              </label>
+              <label className="form-label" htmlFor="confirmPassword">Confirm Password <span className="required">*</span></label>
               <input
                 id="confirmPassword"
                 type="password"
@@ -172,15 +151,27 @@ export default function Register() {
             </div>
           </div>
 
-       
-          <button
-            type="submit"
-            className="btn btn-primary btn-full btn-lg"
-            disabled={loading}
-          >
-            {loading ? 'Creating account...' : 'Create Account'}
+          {/* Security note */}
+          <div className="alert alert-warning" style={{ fontSize: '0.8rem', marginBottom: '16px' }}>
+            <div>
+              <strong>🔒 Security note:</strong> Your password is hashed with bcrypt before storage — it's never stored in plain text. JWT tokens are stored in localStorage for simplicity in this project (not ideal for production).
+            </div>
+          </div>
+
+          <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>
+            {loading ? 'Creating account...' : '🚀 Create Account'}
           </button>
         </form>
+
+        {/* Success banner */}
+        {successMsg && (
+          <div className="alert alert-success" style={{ marginTop: '16px' }}>
+            <span>✅ </span>{successMsg}
+            <div style={{ marginTop: '12px' }}>
+              <Link to="/login" className="btn btn-primary btn-sm">Go to Login</Link>
+            </div>
+          </div>
+        )}
 
         <div className="auth-footer">
           Already have an account?{' '}
@@ -188,5 +179,5 @@ export default function Register() {
         </div>
       </div>
     </div>
-  )
+  );
 }

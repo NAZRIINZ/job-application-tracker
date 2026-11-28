@@ -1,13 +1,17 @@
-// ============================================================
-// JobList.jsx - Lists all job applications with search, filter, pagination
-// ============================================================
 import React, { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import API_URL from '../api'
 import { StatusBadge, LoadingSpinner, ConfirmModal } from '../components/Layout'
+import { Search, X, AlertTriangle, ClipboardList, ExternalLink, Pencil, Trash2 } from 'lucide-react'
 
-const STATUS_OPTIONS = ['', 'Wishlist', 'Applied', 'Interview', 'Offer Received', 'Rejected']
+const STATUS_OPTIONS = [
+    { value: 'Wishlist', label: 'Saved Jobs' },
+    { value: 'Applied', label: 'Applied' },
+    { value: 'Interview', label: 'Interview' },
+    { value: 'Offer Received', label: 'Offer Received' },
+    { value: 'Rejected', label: 'Rejected' }
+]
 
 function formatDate(dateStr) {
   if (!dateStr) return '—'
@@ -142,9 +146,13 @@ export default function JobList() {
                 value={status}
                 onChange={handleStatusChange}
               >
-                {STATUS_OPTIONS.map(s => (
-                  <option key={s} value={s}>{s || 'All Statuses'}</option>
-                ))}
+                              <option value="">All Statuses</option>
+
+                              {STATUS_OPTIONS.map(s => (
+                                  <option key={s.value} value={s.value}>
+                                      {s.label}
+                                  </option>
+                              ))}
               </select>
                       </div>
                       {/* From Date */}
@@ -198,7 +206,7 @@ export default function JobList() {
       {/* Error state */}
       {error && (
         <div className="alert alert-danger">
-          <span>⚠️</span>
+          <span><AlertTriangle size={15} style={{ verticalAlign: 'middle' }} /></span>
           <span>{error}</span>
         </div>
       )}

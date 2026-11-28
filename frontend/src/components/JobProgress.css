@@ -1,0 +1,220 @@
+
+/* =========================================
+   JOB SEARCH PROGRESS CARD
+========================================= */
+
+.card.job-progress {
+    width: 100%;
+    min-height: 390px;
+    box-sizing: border-box;
+    padding: 28px 30px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+}
+
+/* =========================================
+   TITLE
+========================================= */
+
+.job-progress .progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 24px;
+}
+
+.job-progress .title-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+    .job-progress .title-left h3 {
+        margin: 0;
+        font-size: 19px;
+        font-weight: 650;
+        color: #1e2952;
+    }
+
+/* =========================================
+   CENTERED PERIOD TOGGLE
+========================================= */
+
+.job-progress .progress-period-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 38px;
+}
+
+/* =========================================
+   DAY / WEEK / MONTH BUTTONS
+========================================= */
+
+.job-progress .period-toggle {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 11px;
+}
+
+    .job-progress .period-toggle button {
+        min-width: 76px;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        color: #475569;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+        .job-progress .period-toggle button:hover:not(.active) {
+            background: #e2e8f0;
+        }
+
+        .job-progress .period-toggle button.active {
+            background: #2563eb;
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(37, 99, 235, 0.15);
+        }
+
+/* =========================================
+   PROGRESS GRAPH AREA
+========================================= */
+
+.job-progress .progress-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    max-width: 570px;
+    margin: 0 auto;
+}
+
+.job-progress .donut-wrapper {
+    flex: 0 0 170px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.job-progress .donut-svg {
+    display: block;
+    flex-shrink: 0;
+    overflow: visible;
+}
+
+.job-progress .progress-circle {
+    transition: stroke-dashoffset 0.5s ease;
+}
+
+.job-progress .progress-percentage {
+    fill: #1e2952;
+    font-size: 31px;
+    font-weight: 700;
+}
+
+/* =========================================
+   APPLICATION DETAILS
+========================================= */
+
+.job-progress .linear-section {
+    flex: 1;
+    min-width: 0;
+}
+
+.job-progress .progress-headline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 7px;
+    margin-bottom: 15px;
+    color: #1e2952;
+    font-size: 21px;
+}
+
+    .job-progress .progress-headline strong {
+        font-weight: 700;
+    }
+
+/* Horizontal progress bar */
+
+.job-progress .linear-bar-bg {
+    width: 100%;
+    height: 13px;
+    overflow: hidden;
+    background: #e2e8f0;
+    border-radius: 999px;
+}
+
+.job-progress .linear-bar-fg {
+    height: 100%;
+    background: linear-gradient( to right, #0284c7, #2dd4bf );
+    border-radius: 999px;
+    transition: width 0.5s ease;
+}
+
+/* Remaining applications */
+
+.job-progress .progress-subcaption {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 13px;
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.job-progress .progress-dot {
+    width: 9px;
+    height: 9px;
+    flex-shrink: 0;
+    background: #2dd4bf;
+    border-radius: 50%;
+}
+
+/* =========================================
+   RESPONSIVE DESIGN
+========================================= */
+
+@media (max-width: 600px) {
+    .card.job-progress {
+        min-height: auto;
+        padding: 22px 16px;
+    }
+
+    .job-progress .progress-period-row {
+        margin-bottom: 30px;
+    }
+
+    .job-progress .progress-content {
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .job-progress .linear-section {
+        width: 100%;
+        text-align: center;
+    }
+
+    .job-progress .progress-headline {
+        justify-content: center;
+        font-size: 19px;
+    }
+
+    .job-progress .progress-subcaption {
+        justify-content: center;
+    }
+}

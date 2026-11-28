@@ -16,11 +16,13 @@ import Layout from './components/Layout'
 import Home     from './pages/Home'
 import Login    from './pages/Login'
 import Register from './pages/Register'
+import VerifyEmail from './pages/VerifyEmail'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 
 // Pages (protected - require login)
 import Dashboard  from './pages/Dashboard'
+import Calendar from './pages/Calendar'
 import JobList    from './pages/JobList'
 import AddJob     from './pages/AddJob'
 import EditJob    from './pages/EditJob'
@@ -87,6 +89,7 @@ function App() {
           <Route path="/"         element={<Home />} />
           <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           {/* Password reset routes - accessible without login */}
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -99,6 +102,7 @@ function App() {
           <Route path="/profile"         element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
           {/* Catch-all redirect */}
+          <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

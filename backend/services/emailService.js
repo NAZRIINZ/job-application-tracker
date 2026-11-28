@@ -1,7 +1,7 @@
 ﻿// ============================================================
 // emailService.js - All Email Notification Functions
 // ============================================================
-// Handles: Welcome, Password Reset, Status Update, Follow-up Reminder
+// Handles: Welcome, Email Verification, Password Reset, Status Update, Follow-up Reminder
 // Uses nodemailer with Gmail SMTP (configured in config/email.js)
 // ============================================================
 
@@ -58,13 +58,12 @@ async function sendWelcomeEmail(email, name) {
       <ul style="color:#374151; line-height:1.8;">
         <li>📋 <strong>Track</strong> all your job applications in one place</li>
         <li>🗓️ <strong>Schedule</strong> and manage interview rounds</li>
-        <li>🔔 <strong>Set reminders</strong> for follow-up dates</li>
+        <li>🔔 <strong>Set reminders</strong> for follow‑up dates</li>
         <li>📊 <strong>Monitor</strong> your job search progress on the dashboard</li>
       </ul>
       <div style="text-align:center; margin:24px 0;">
         <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login"
-           style="display:inline-block; background:#6366f1; color:#fff; padding:12px 32px;
-                  border-radius:8px; text-decoration:none; font-weight:600; font-size:15px;">
+           style="display:inline-block; background:#6366f1; color:#fff; padding:12px 32px; border-radius:8px; text-decoration:none; font-weight:600; font-size:15px;">
           🚀 Start Tracking Jobs
         </a>
       </div>
@@ -80,9 +79,60 @@ async function sendWelcomeEmail(email, name) {
     });
 
     console.log('✅ Welcome email sent! MessageID:', info.messageId);
+    console.log('   Accepted recipients:', info.accepted);
+    console.log('   Rejected recipients:', info.rejected);
     return true;
   } catch (error) {
-    console.error('❌ Welcome email failed:', error.message);
+    console.error('❌ Welcome email failed:', error);
+    return false;
+  }
+}
+
+// ============================================================
+// EMAIL VERIFICATION — Sent when a new user registers or resends token
+// ============================================================
+async function sendVerificationEmail(email, name, verificationLink) {
+  console.log('📧 Sending verification email to:', email);
+  console.log('   Verification link:', verificationLink);
+
+  try {
+    const html = emailTemplate('Verify Your Email Address ✉️', `
+      <p style="color:#374151; line-height:1.6;">Hi <strong>${name}</strong>,</p>
+      <p style="color:#374151; line-height:1.6;">
+        Thank you for registering with <strong>Job Application Tracker</strong>!
+        Please verify your email address to activate your account.
+      </p>
+      <div style="text-align:center; margin:28px 0;">
+        <a href="${verificationLink}"
+           style="display:inline-block; background:#6366f1; color:#fff; padding:14px 36px; border-radius:8px; text-decoration:none; font-weight:600; font-size:16px;">
+          Verify My Email
+        </a>
+      </div>
+      <p style="color:#92400e; font-size:14px;">
+        This verification link will expire in 24 hours and can only be used once.
+      </p>
+      <p style="color:#6b7280; font-size:14px;">
+        If you did not create this account, you can ignore this email.
+      </p>
+      <p style="color:#374151;">
+        Best Regards,<br>
+        <strong>Job Application Tracker Team</strong>
+      </p>
+    `);
+
+    const info = await transporter.sendMail({
+      from: { name: 'JobTracker', address: process.env.EMAIL_USER },
+      to: email,
+      subject: '✉️ Verify Your JobTracker Email Address',
+      html,
+    });
+
+    console.log('✅ Verification email sent! MessageID:', info.messageId);
+    console.log('   Accepted recipients:', info.accepted);
+    console.log('   Rejected recipients:', info.rejected);
+    return true;
+  } catch (error) {
+    console.error('❌ Verification email failed:', error);
     return false;
   }
 }
@@ -92,6 +142,7 @@ async function sendWelcomeEmail(email, name) {
 // ============================================================
 async function sendPasswordResetEmail(email, name, resetLink) {
   console.log('📧 Sending password reset email to:', email);
+  console.log('   Reset link:', resetLink);
 
   try {
     const html = emailTemplate('Reset Your Password 🔑', `
@@ -102,8 +153,7 @@ async function sendPasswordResetEmail(email, name, resetLink) {
       </p>
       <div style="text-align:center; margin:28px 0;">
         <a href="${resetLink}"
-           style="display:inline-block; background:#6366f1; color:#fff; padding:14px 36px;
-                  border-radius:8px; text-decoration:none; font-weight:600; font-size:16px;">
+           style="display:inline-block; background:#6366f1; color:#fff; padding:14px 36px; border-radius:8px; text-decoration:none; font-weight:600; font-size:16px;">
           🔑 Reset My Password
         </a>
       </div>
@@ -113,14 +163,14 @@ async function sendPasswordResetEmail(email, name, resetLink) {
         </p>
       </div>
       <p style="color:#6b7280; font-size:14px;">
-        If you didn't request a password reset, you can safely ignore this email.
-        Your password will remain unchanged.
+        If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
       </p>
-      <hr style="border:none; border-top:1px solid #e5e7eb; margin:20px 0;">
+      <hr style="border:none; border-top:1px solid #e5e7eb; margin:20px 0;"/>
       <p style="color:#9ca3af; font-size:12px;">
         If the button doesn't work, copy and paste this link into your browser:<br>
         <a href="${resetLink}" style="color:#6366f1; word-break:break-all;">${resetLink}</a>
       </p>
+      <p style="color:#374151;">Best Regards,<br><strong>Job Application Tracker Team</strong></p>
     `);
 
     const info = await transporter.sendMail({
@@ -131,9 +181,11 @@ async function sendPasswordResetEmail(email, name, resetLink) {
     });
 
     console.log('✅ Password reset email sent! MessageID:', info.messageId);
+    console.log('   Accepted recipients:', info.accepted);
+    console.log('   Rejected recipients:', info.rejected);
     return true;
   } catch (error) {
-    console.error('❌ Password reset email failed:', error.message);
+    console.error('❌ Password reset email failed:', error);
     return false;
   }
 }
@@ -180,8 +232,7 @@ async function sendStatusUpdateEmail(email, name, companyName, jobTitle, oldStat
       </div>
       <div style="text-align:center; margin:24px 0;">
         <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/jobs"
-           style="display:inline-block; background:#6366f1; color:#fff; padding:12px 28px;
-                  border-radius:8px; text-decoration:none; font-weight:600; font-size:14px;">
+           style="display:inline-block; background:#6366f1; color:#fff; padding:12px 28px; border-radius:8px; text-decoration:none; font-weight:600; font-size:14px;">
           📋 View My Applications
         </a>
       </div>
@@ -196,9 +247,11 @@ async function sendStatusUpdateEmail(email, name, companyName, jobTitle, oldStat
     });
 
     console.log('✅ Status update email sent! MessageID:', info.messageId);
+    console.log('   Accepted recipients:', info.accepted);
+    console.log('   Rejected recipients:', info.rejected);
     return true;
   } catch (error) {
-    console.error('❌ Status update email failed:', error.message);
+    console.error('❌ Status update email failed:', error);
     return false;
   }
 }
@@ -249,8 +302,7 @@ async function sendFollowUpReminderEmail(email, name, jobs) {
       </table>
       <div style="text-align:center; margin:24px 0;">
         <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/jobs"
-           style="display:inline-block; background:#6366f1; color:#fff; padding:12px 28px;
-                  border-radius:8px; text-decoration:none; font-weight:600; font-size:14px;">
+           style="display:inline-block; background:#6366f1; color:#fff; padding:12px 28px; border-radius:8px; text-decoration:none; font-weight:600; font-size:14px;">
           📋 View My Applications
         </a>
       </div>
@@ -268,9 +320,11 @@ async function sendFollowUpReminderEmail(email, name, jobs) {
     });
 
     console.log('✅ Follow-up reminder email sent! MessageID:', info.messageId);
+    console.log('   Accepted recipients:', info.accepted);
+    console.log('   Rejected recipients:', info.rejected);
     return true;
   } catch (error) {
-    console.error('❌ Follow-up reminder email failed:', error.message);
+    console.error('❌ Follow-up reminder email failed:', error);
     return false;
   }
 }
@@ -278,6 +332,7 @@ async function sendFollowUpReminderEmail(email, name, jobs) {
 // Export all email functions
 module.exports = {
   sendWelcomeEmail,
+  sendVerificationEmail,
   sendPasswordResetEmail,
   sendStatusUpdateEmail,
   sendFollowUpReminderEmail,

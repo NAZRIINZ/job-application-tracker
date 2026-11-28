@@ -5,6 +5,7 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import API_URL from '../api'
+import { FileText, Save, CheckCircle, AlertTriangle } from 'lucide-react'
 
 const STATUS_OPTIONS = ['Wishlist', 'Applied', 'Interview', 'Offer Received', 'Rejected']
 
@@ -53,7 +54,7 @@ export default function AddJob() {
     if (!form.company_name.trim())     errs.company_name     = 'Company name is required'
     if (!form.job_title.trim())        errs.job_title        = 'Job title is required'
     if (!form.application_date)        errs.application_date = 'Application date is required'
-    if (!STATUS_OPTIONS.includes(form.status)) errs.status   = 'Please select a valid status'
+    if (!STATUS_OPTIONS.some(s => s.value === form.status)) { errs.status = 'Please select a valid status'}
     if (form.job_link && !isValidUrl(form.job_link)) {
       errs.job_link = 'Please enter a valid URL (e.g. https://...)'
     }
@@ -207,21 +208,27 @@ export default function AddJob() {
                 {errors.application_date && <p className="form-error">⚠ {errors.application_date}</p>}
               </div>
 
-              <div className="form-group">
-                <label className="form-label" htmlFor="status">Status</label>
-                <select
-                  id="status"
-                  name="status"
-                  value={form.status}
-                  onChange={handleChange}
-                  className={`form-control ${errors.status ? 'error' : ''}`}
-                >
-                  {STATUS_OPTIONS.map(s => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-                {errors.status && <p className="form-error">⚠ {errors.status}</p>}
-              </div>
+                          <div className="form-group">
+                              <label className="form-label" htmlFor="status">Status</label>
+
+                              <select
+                                  id="status"
+                                  name="status"
+                                  value={form.status}
+                                  onChange={handleChange}
+                                  className={`form-control ${errors.status ? 'error' : ''}`}
+                              >
+                                  {STATUS_OPTIONS.map(s => (
+                                      <option key={s.value} value={s.value}>
+                                          {s.label}
+                                      </option>
+                                  ))}
+                              </select>
+
+                              {errors.status && (
+                                  <p className="form-error">⚠ {errors.status}</p>
+                              )}
+                          </div>
             </div>
 
             {/* Row 4 */}

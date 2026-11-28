@@ -3,15 +3,19 @@
 // ============================================================
 import React from 'react'
 import { Link } from 'react-router-dom'
+import {
+    ClipboardList, CalendarCheck, Search, BarChart2,
+    Bell, ShieldCheck, Briefcase, Rocket
+} from 'lucide-react'
 
 export default function Home() {
   const features = [
-    { icon: '📋', title: 'Track Applications',  desc: 'Keep all your job applications organized in one place with status updates.' },
-    { icon: '🗓️', title: 'Manage Interviews',   desc: 'Schedule and track interviews with dates, types, and preparation notes.' },
-    { icon: '🔍', title: 'Search & Filter',      desc: 'Quickly find applications by company, status, or location.' },
-    { icon: '📊', title: 'Dashboard Overview',   desc: 'See your job search progress at a glance with summary statistics.' },
-    { icon: '🔔', title: 'Follow-up Reminders', desc: 'Set follow-up dates so you never miss an important deadline.' },
-    { icon: '🔒', title: 'Secure & Private',     desc: 'Your data is protected with JWT authentication and hashed passwords.' },
+    { icon: ClipboardList, title: 'Track Applications',  desc: 'Keep all your job applications organized in one place with status updates.' },
+    { icon: CalendarCheck, title: 'Manage Interviews',   desc: 'Schedule and track interviews with dates, types, and preparation notes.' },
+    { icon: Search,        title: 'Search & Filter',     desc: 'Quickly find applications by company, status, or location.' },
+    { icon: BarChart2,     title: 'Dashboard Overview',  desc: 'See your job search progress at a glance with summary statistics.' },
+    { icon: Bell,          title: 'Follow-up Reminders', desc: 'Set follow-up dates so you never miss an important deadline.' },
+    { icon: ShieldCheck,   title: 'Secure & Private',    desc: 'Your data is protected with JWT authentication and hashed passwords.' },
   ]
 
   return (
@@ -53,16 +57,22 @@ export default function Home() {
           A complete toolkit for your job search journey
         </p>
 
-        <div className="features-grid">
-          {features.map((f, i) => (
-            <div key={i} className="feature-card">
-              <div className="feature-icon">{f.icon}</div>
-              <h3 className="feature-title">{f.title}</h3>
-              <p className="feature-desc">{f.desc}</p>
-            </div>
-          ))}
-        </div>
+              <div className="features-grid">
+                  {features.map((f, i) => {
+                      const Icon = f.icon
 
+                      return (
+                          <div key={i} className="feature-card">
+                              <div className="feature-icon">
+                                  <Icon size={28} />
+                              </div>
+
+                              <h3 className="feature-title">{f.title}</h3>
+                              <p className="feature-desc">{f.desc}</p>
+                          </div>
+                      )
+                  })}
+              </div>
         <div className="text-center mt-24">
           <Link to="/register" className="btn btn-primary btn-lg">
             Create Free Account

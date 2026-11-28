@@ -6,9 +6,16 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { LoadingSpinner } from '../components/Layout'
 import API_URL from '../api'
+import { Pencil, Save, CheckCircle, AlertTriangle } from 'lucide-react'
 
 
-const STATUS_OPTIONS = ['Wishlist', 'Applied', 'Interview', 'Offer Received', 'Rejected']
+const STATUS_OPTIONS = [
+    { value: 'Wishlist', label: 'Saved Jobs' },
+    { value: 'Applied', label: 'Applied' },
+    { value: 'Interview', label: 'Interview' },
+    { value: 'Offer Received', label: 'Offer Received' },
+    { value: 'Rejected', label: 'Rejected' }
+]
 
 function isValidUrl(str) {
   try {
@@ -81,15 +88,33 @@ export default function EditJob() {
     setApiError('')
   }
 
-  function validate() {
-    const errs = {}
-    if (!form.company_name.trim()) errs.company_name = 'Company name is required'
-    if (!form.job_title.trim()) errs.job_title = 'Job title is required'
-    if (!form.application_date) errs.application_date = 'Application date is required'
-    if (form.job_link && !isValidUrl(form.job_link)) errs.job_link = 'Please enter a valid URL'
-    setErrors(errs)
-    return Object.keys(errs).length === 0
-  }
+    function validate() {
+        const errs = {}
+
+        if (!form.company_name.trim()) {
+            errs.company_name = 'Company name is required'
+        }
+
+        if (!form.job_title.trim()) {
+            errs.job_title = 'Job title is required'
+        }
+
+        if (!form.application_date) {
+            errs.application_date = 'Application date is required'
+        }
+
+        // Validate status
+        if (!STATUS_OPTIONS.some(s => s.value === form.status)) {
+            errs.status = 'Please select a valid status'
+        }
+
+        if (form.job_link && !isValidUrl(form.job_link)) {
+            errs.job_link = 'Please enter a valid URL'
+        }
+
+        setErrors(errs)
+        return Object.keys(errs).length === 0
+    }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -188,19 +213,48 @@ export default function EditJob() {
                 <input id="salary" type="text" name="salary" value={form.salary} onChange={handleChange} className="form-control" placeholder="e.g. $80,000 - $100,000" />
               </div>
             </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label" htmlFor="application_date">Application Date <span className="required">*</span></label>
-                <input id="application_date" type="date" name="application_date" value={form.application_date} onChange={handleChange} className={`form-control ${errors.application_date ? 'error' : ''}`} />
-                {errors.application_date && <p className="form-error">⚠ {errors.application_date}</p>}
-              </div>
-              <div className="form-group">
-                <label className="form-label" htmlFor="status">Status</label>
-                <select id="status" name="status" value={form.status} onChange={handleChange} className="form-control">
-                  {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-            </div>
+                      <div className="form-row">
+                          <div className="form-group">
+                              <label className="form-label" htmlFor="application_date">
+                                  Application Date <span className="required">*</span>
+                              </label>
+
+                              <input
+                                  id="application_date"
+                                  type="date"
+                                  name="application_date"
+                                  value={form.application_date}
+                                  onChange={handleChange}
+                                  className={`form-control ${errors.application_date ? 'error' : ''}`}
+                              />
+
+                              {errors.application_date && (
+                                  <p className="form-error">⚠ {errors.application_date}</p>
+                              )}
+                          </div>
+
+                          <div className="form-group">
+                              <label className="form-label" htmlFor="status">Status</label>
+
+                              <select
+                                  id="status"
+                                  name="status"
+                                  value={form.status}
+                                  onChange={handleChange}
+                                  className={`form-control ${errors.status ? 'error' : ''}`}
+                              >
+                                  {STATUS_OPTIONS.map(s => (
+                                      <option key={s.value} value={s.value}>
+                                          {s.label}
+                                      </option>
+                                  ))}
+                              </select>
+
+                              {errors.status && (
+                                  <p className="form-error">⚠ {errors.status}</p>
+                              )}
+                          </div>
+                      </div>
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label" htmlFor="job_link">Job Posting URL</label>

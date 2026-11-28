@@ -168,82 +168,196 @@ img {
 .page-content {
   flex: 1;
   padding: 24px;
-  max-width: 1200px;
+  max-width: 100%;
   width: 100%;
 }
+
 
 /* ---------------------------------------------------------------
    NAVBAR
    --------------------------------------------------------------- */
 .navbar {
-  height: var(--navbar-height);
-  background: #fff;
-  border-bottom: 1px solid var(--gray-200);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: var(--shadow-sm);
+    height: var(--navbar-height);
+    background: #fff;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    gap: 12px;
 }
 
-.navbar-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--primary);
-  text-decoration: none;
+.navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
 }
 
-.navbar-brand:hover {
-  text-decoration: none;
+.greeting-block {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
-.navbar-brand .brand-icon {
-  font-size: 1.5rem;
+.greeting-text {
+    font-size: 0.9375rem;
+    font-weight: 400;
+    color: var(--gray-500);
+    letter-spacing: -0.01em;
+}
+
+.greeting-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    letter-spacing: -0.02em;
 }
 
 .navbar-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
 }
 
-.navbar-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.875rem;
-  color: var(--gray-600);
+.notification-wrapper {
+    position: relative;
 }
+
+.notification-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: none;
+    background: transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+    .notification-btn:hover {
+        background: var(--gray-100);
+    }
+
+.notif-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 3px;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.notification-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 300;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+    min-width: 340px;
+    max-width: 400px;
+    overflow: hidden;
+}
+
+/* Normal profile appearance - no box */
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: default;
+}
+
+    .navbar-user:hover {
+        background: transparent;
+        border-color: transparent;
+    }
 
 .user-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 0.875rem;
-  flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.navbar-username {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
 }
 
 .menu-toggle {
-  display: none;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: var(--gray-600);
-  padding: 4px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--gray-600);
+    flex-shrink: 0;
+    transition: background var(--transition);
 }
+
+    .menu-toggle:hover {
+        background: var(--gray-100);
+    }
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary);
+    text-decoration: none;
+}
+
+    .navbar-brand:hover {
+        text-decoration: none;
+    }
+
+    .navbar-brand .brand-icon {
+        font-size: 1.5rem;
+    }
 
 /* ---------------------------------------------------------------
    SIDEBAR
@@ -1424,7 +1538,31 @@ tbody tr:hover {
   }
 
   .menu-toggle {
-    display: block;
+    display: flex;
+  }
+
+  /* Hide the username text on mobile to save space */
+  .navbar-username {
+    display: none;
+  }
+
+  /* Compress greeting on mobile */
+  .greeting-text {
+    font-size: 0.8125rem;
+  }
+
+  .greeting-name {
+    font-size: 0.875rem;
+  }
+
+  /* Tighten navbar padding on mobile */
+  .navbar {
+    padding: 0 16px;
+    gap: 8px;
+  }
+
+  .navbar-right {
+    gap: 6px;
   }
 
   .page-content {
