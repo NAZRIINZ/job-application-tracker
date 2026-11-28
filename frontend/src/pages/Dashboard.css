@@ -788,10 +788,17 @@
     color: #142b50;
 }
 
+
 .jd-details-list {
     display: flex;
     flex-direction: column;
-    gap: 9px;
+    gap: 12px;
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    padding-right: 6px;
+    box-sizing: border-box;
 }
 
 .jd-detail-item {
@@ -1155,5 +1162,281 @@
         box-sizing: border-box;
     }
 }
+@media (max-width: 768px) {
+    .jd-details-card {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .jd-details-list {
+        max-height: 450px;
+        overflow-y: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .jd-details-list {
+        max-height: 400px;
+    }
+}
 
 
+/* ==========================================
+   Calendar Event - Complete Details
+========================================== */
+
+.jd-details-card {
+    min-width: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.jd-details-list {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2px 6px 8px 2px;
+    box-sizing: border-box;
+}
+
+.jd-detail-item {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    padding: 15px;
+    border-radius: 12px;
+    box-sizing: border-box;
+}
+
+.jd-detail-content {
+    width: 100%;
+    min-width: 0;
+    flex: 1;
+}
+
+.jd-detail-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+    .jd-detail-title-row strong {
+        min-width: 0;
+        flex: 1 1 120px;
+        font-size: 14px;
+        font-weight: 750;
+        color: #1b3155;
+        overflow-wrap: anywhere;
+    }
+
+.jd-type-badge {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.jd-event-full-details {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin-top: 12px;
+    padding-top: 11px;
+    border-top: 1px solid rgba(100, 116, 139, 0.16);
+}
+
+.jd-event-detail-row {
+    display: grid;
+    grid-template-columns: minmax(95px, 0.8fr) minmax(0, 1.2fr);
+    align-items: start;
+    gap: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+    .jd-event-detail-row strong {
+        color: #52647f;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+
+    .jd-event-detail-row span {
+        color: #263b5c;
+        font-weight: 500;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+.jd-detail-content p {
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.jd-detail-content a {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 7px;
+    background: #eaf2ff;
+    color: #1749b5;
+    text-decoration: none;
+    font-weight: 700;
+    transition: background 0.2s ease;
+}
+
+    .jd-detail-content a:hover {
+        background: #d9e8ff;
+    }
+
+/* Tablet */
+@media (max-width: 900px) {
+    .jd-details-card {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .jd-details-list {
+        max-height: 500px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    .jd-details-card {
+        padding: 13px;
+    }
+
+    .jd-details-list {
+        max-height: 450px;
+        gap: 11px;
+        padding-right: 3px;
+    }
+
+    .jd-detail-item {
+        padding: 12px;
+    }
+
+    .jd-event-detail-row {
+        grid-template-columns: minmax(85px, 0.8fr) minmax(0, 1.2fr);
+        gap: 6px;
+        font-size: 11px;
+    }
+
+    .jd-detail-title-row strong {
+        font-size: 13px;
+    }
+}
+
+/* Small mobile */
+@media (max-width: 380px) {
+    .jd-event-detail-row {
+        grid-template-columns: 1fr;
+        gap: 2px;
+    }
+
+    .jd-detail-item {
+        padding: 10px;
+    }
+}
+.jd-edit-event-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background: #eaf2ff;
+    color: #1749b5;
+    text-decoration: none;
+    transition: background 0.2s ease;
+}
+
+    .jd-edit-event-btn svg {
+        width: 20px;
+        height: 20px;
+        stroke-width: 2;
+    }
+
+    .jd-edit-event-btn:hover {
+        background: #d9e8ff;
+    }
+/* ==========================================
+   Calendar Sidebar - Job Status Dropdown
+========================================== */
+
+.jd-status-change {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 14px 0;
+    width: 100%;
+    min-width: 0;
+}
+
+    .jd-status-change .form-label {
+        display: block;
+        margin: 0;
+        color: #52647f;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .jd-status-change .form-control {
+        width: 100%;
+        min-width: 0;
+        min-height: 42px;
+        padding: 9px 12px;
+        border: 1px solid #d1dbea;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #263b5c;
+        font-size: 13px;
+        font-weight: 600;
+        outline: none;
+        cursor: pointer;
+        box-sizing: border-box;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .jd-status-change .form-control:focus {
+            border-color: #3975d8;
+            box-shadow: 0 0 0 3px rgba(57, 117, 216, 0.12);
+        }
+
+        .jd-status-change .form-control:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+    .jd-status-change .text-muted {
+        color: #71809a;
+        font-size: 11px;
+    }
+
+    .jd-status-change .form-error {
+        margin: 0;
+        color: #dc3545;
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+    .jd-status-change {
+        margin: 12px 0;
+    }
+
+        .jd-status-change .form-control {
+            min-height: 40px;
+            font-size: 12px;
+        }
+}

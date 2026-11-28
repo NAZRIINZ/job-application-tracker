@@ -7,8 +7,15 @@ import { useAuth } from '../context/AuthContext';
 import { LoadingSpinner } from '../components/Layout';
 import API_URL from '../api';
 import './Dashboard.css'; // reuse styles
-import { CalendarDays, BriefcaseBusiness, Users, Clock, Heart } from 'lucide-react';
+import { CalendarDays, BriefcaseBusiness,Users,Clock,Heart, Pencil} from 'lucide-react';
 
+const STATUS_OPTIONS = [
+    { value: 'Wishlist', label: 'Saved Jobs' },
+    { value: 'Applied', label: 'Applied' },
+    { value: 'Interview', label: 'Interview' },
+    { value: 'Offer Received', label: 'Offer Received' },
+    { value: 'Rejected', label: 'Rejected' }
+];
 export default function CalendarPage() {
   const { getAuthHeaders, user } = useAuth();
 
@@ -18,7 +25,8 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [calendarLoading, setCalendarLoading] = useState(true);
   const [error, setError] = useState('');
-
+  const [statusSavingId, setStatusSavingId] = useState(null);
+  const [statusError, setStatusError] = useState({});
   const [activeFilter, setActiveFilter] = useState('all');
   const [calendarView, setCalendarView] = useState('month');
   const [currentMonth, setCurrentMonth] = useState(() => {
@@ -26,7 +34,7 @@ export default function CalendarPage() {
     return new Date(today.getFullYear(), today.getMonth(), 1);
   });
   const [selectedDate, setSelectedDate] = useState(toDateKey(new Date()));
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  
 
   // Helper date functions (same as Dashboard)
   function toDateKey(value) {
@@ -133,7 +141,8 @@ export default function CalendarPage() {
             type: 'wishlist',
             title: company,
             subtitle: title,
-            label: `${company} (Wishlist)`,
+              label: `${company} (Wishlist)`,
+              details: job,
             url: `/jobs/${job.id}/edit`,
           });
         }
@@ -148,7 +157,8 @@ export default function CalendarPage() {
             title: company,
             subtitle: title,
             label: `${company} (Applied)`,
-            status: job.status,
+              status: job.status,
+              details: job,
             url: `/jobs/${job.id}/edit`,
           });
         }
@@ -162,28 +172,31 @@ export default function CalendarPage() {
           type: 'followup',
           title: company,
           subtitle: `Follow-up for ${title}`,
-          label: `${company} (Follow-up)`,
+            label: `${company} (Follow-up)`,
+            details: job,
           url: `/jobs/${job.id}/edit`,
         });
       }
     });
-    interviews.forEach(interview => {
-      const date = toDateKey(interview.interview_date);
-      if (!date) return;
-      result.push({
-        id: `interview-${interview.id}`,
-        interviewId: interview.id,
-        jobId: interview.job_id,
-        date,
-        type: 'interview',
-        title: interview.company_name || 'Interview',
-        subtitle: interview.job_title || interview.interview_type || 'Interview',
-        time: getTime(interview.interview_time),
-        notes: interview.notes || '',
-        label: `${interview.company_name || 'Interview'} (Interview)`,
-        url: '/interviews',
+      interviews.forEach(interview => {
+          const date = toDateKey(interview.interview_date);
+          if (!date) return;
+
+          result.push({
+              id: `interview-${interview.id}`,
+              interviewId: interview.id,
+              jobId: interview.job_id,
+              date,
+              type: 'interview',
+              title: interview.company_name || 'Interview',
+              subtitle: interview.job_title || interview.interview_type || 'Interview',
+              time: getTime(interview.interview_time),
+              notes: interview.notes || '',
+              details: interview,
+              label: `${interview.company_name || 'Interview'} (Interview)`,
+              url: '/interviews',
+          });
       });
-    });
     return result.sort((a, b) => a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || ''));
   }, [jobs, interviews]);
 
@@ -197,15 +210,75 @@ export default function CalendarPage() {
   function changeMonth(direction) {
     setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + direction, 1));
   }
-  function goToday() {
-    const today = new Date();
-    setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1));
-    setSelectedDate(toDateKey(today));
-    setSelectedEvent(null);
-  }
-  function selectDate(dateKey) { setSelectedDate(dateKey); setSelectedEvent(null); }
-  function selectFilter(filter) { setActiveFilter(filter); setSelectedEvent(null); }
+    function goToday() {
+        const today = new Date();
+        setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+        setSelectedDate(toDateKey(today));
+    }
 
+    function selectDate(dateKey) {
+        setSelectedDate(dateKey);
+    }
+
+    function selectFilter(filter) {
+        setActiveFilter(filter);
+    }
+
+    async function handleJobStatusChange(jobId, newStatus) {
+        const job = jobs.find(
+            item => String(item.id) === String(jobId)
+        );
+
+        if (!job || job.status === newStatus) return;
+
+        setStatusSavingId(jobId);
+
+        setStatusError(prev => ({
+            ...prev,
+            [jobId]: ''
+        }));
+
+        try {
+            const res = await fetch(`${API_URL}/api/jobs/${jobId}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    company_name: job.company_name || '',
+                    job_title: job.job_title || '',
+                    location: job.location || '',
+                    salary: job.salary || '',
+                    application_date: job.application_date,
+                    status: newStatus,
+                    job_link: job.job_link || '',
+                    notes: job.notes || '',
+                    follow_up_date: job.follow_up_date || ''
+                })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || 'Failed to update status.');
+            }
+
+            // Update the local jobs state
+            setJobs(prev =>
+                prev.map(item =>
+                    String(item.id) === String(jobId)
+                        ? { ...item, status: newStatus }
+                        : item
+                )
+            );
+
+        } catch (err) {
+            setStatusError(prev => ({
+                ...prev,
+                [jobId]: err.message || 'Failed to update status.'
+            }));
+        } finally {
+            setStatusSavingId(null);
+        }
+    }
   const calendarDays = useMemo(() => {
     const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     const start = new Date(firstDay);
@@ -229,13 +302,13 @@ export default function CalendarPage() {
     });
   }, [currentMonth, calendarView, selectedDate, filteredEvents]);
 
-  const filters = [
-    { id: 'all', label: 'All Events', icon: 'calendar-days' },
-    { id: 'application', label: 'Job Applications', icon: 'briefcase-business' },
-    { id: 'interview', label: 'Interviews', icon: 'users' },
-    { id: 'followup', label: 'Follow-ups', icon: 'clock' },
-    { id: 'wishlist', label: 'Wishlist', icon: 'heart' },
-  ];
+    const filters = [
+        { id: 'all', label: 'All Activities', icon: 'calendar-days' },
+        { id: 'application', label: 'Job Applications', icon: 'briefcase-business' },
+        { id: 'interview', label: 'Interviews', icon: 'users' },
+        { id: 'followup', label: 'Follow-ups', icon: 'clock' },
+        { id: 'wishlist', label: 'Saved Jobs', icon: 'heart' },
+    ];
 
   if (loading) return <LoadingSpinner text="Loading dashboard..." />;
 
@@ -343,7 +416,7 @@ export default function CalendarPage() {
                           key={event.id}
                           className={`jd-calendar-event ${event.type}`}
                           title={`${event.title} - ${event.subtitle}`}
-                          onClick={e => { e.stopPropagation(); setSelectedDate(event.date); setSelectedEvent(event); }}
+                              onClick={e => {e.stopPropagation();selectDate(event.date);}}
                         >
                           {event.title}
                         </span>
@@ -370,18 +443,24 @@ export default function CalendarPage() {
         <aside className="jd-details-card">
           <div className="jd-details-heading"><h2>Selected Date Details</h2></div>
           <h3>{formatDate(selectedDate)}</h3>
-          <div className="jd-details-list">
-            {selectedEvent ? (
-              <EventDetails event={selectedEvent} />
-            ) : selectedDateEvents.length > 0 ? (
-              selectedDateEvents.map(ev => <EventDetails key={ev.id} event={ev} />)
-            ) : (
-              <div className="jd-no-events">
-                <strong>No events for this date</strong>
-                <p>Select another date or add a new activity.</p>
-              </div>
-            )}
-          </div>
+                  <div className="jd-details-list">
+                      {selectedDateEvents.length > 0 ? (
+                          selectedDateEvents.map(ev => (
+                              <EventDetails
+                                  key={ev.id}
+                                  event={ev}
+                                  onStatusChange={handleJobStatusChange}
+                                  statusSaving={String(statusSavingId) === String(ev.jobId)}
+                                  statusError={statusError[ev.jobId]}
+                              />
+                          ))
+                      ) : (
+                          <div className="jd-no-events">
+                              <strong>No events scheduled for this date</strong>
+                              <p>Select another date or add a new activity.</p>
+                          </div>
+                      )}
+                  </div>
           <Link to="/jobs/new" className="jd-add-event">+ Add Event</Link>
           <Link to="/interviews" className="jd-manage-interviews">Manage Interviews →</Link>
           <div className="jd-pro-tip"><strong>💡 Pro Tip</strong><p>Use the calendar filters to view applications, interviews, follow‑ups and wishlist activities separately.</p></div>
@@ -391,28 +470,166 @@ export default function CalendarPage() {
   );
 }
 
-function EventDetails({ event }) {
-  const typeLabel = {
-    application: 'Applied',
-    interview: 'Interview',
-    followup: 'Follow-up',
-    wishlist: 'Wishlist',
-  };
-  return (
-    <div className={`jd-detail-item ${event.type}`}>
-      <div className="jd-detail-content">
-        <div className="jd-detail-title-row">
-          <strong>{event.title}</strong>
-          <span className={`jd-type-badge ${event.type}`}>{typeLabel[event.type]}</span>
+
+
+function EventDetails({
+    event,
+    onStatusChange,
+    statusSaving,
+    statusError
+}) {
+    const typeLabel = {
+        application: 'Applied',
+        interview: 'Interview',
+        followup: 'Follow-up',
+        wishlist: 'Saved Jobs',
+    };
+
+    const details = event.details || {};
+
+    const fieldGroups = {
+        interview: [
+            ['Interview Date', 'interview_date'],
+            ['Interview Time', 'interview_time'],
+            ['Interview Type', 'interview_type'],
+            ['Interview Mode', 'interview_mode'],
+            ['Interviewer', 'interviewer_name'],
+            ['Location', 'location'],
+            ['Meeting Link', 'meeting_link'],
+            ['Status', 'status'],
+            ['Feedback', 'feedback'],
+        ],
+        application: [
+            ['Application Date', 'application_date'],
+            ['Job Type', 'job_type'],
+            ['Location', 'location'],
+            ['Work Mode', 'work_mode'],
+            ['Salary', 'salary_range'],
+            ['Notes', 'notes'],
+        ],
+        followup: [
+            ['Follow-up Date', 'follow_up_date'],
+            ['Contact Person', 'contact_person'],
+            ['Contact Method', 'contact_method'],
+            ['Status', 'follow_up_status'],
+            ['Notes', 'notes'],
+        ],
+        wishlist: [
+            ['Date Added', 'created_at'],
+            ['Job Type', 'job_type'],
+            ['Location', 'location'],
+            ['Work Mode', 'work_mode'],
+            ['Salary', 'salary_range'],
+            ['Notes', 'notes'],
+        ],
+    };
+
+    const fields = fieldGroups[event.type] || [];
+
+    return (
+        <div className={`jd-detail-item ${event.type}`}>
+            <div className="jd-detail-content">
+
+                <div className="jd-detail-title-row">
+                    <strong>{event.title}</strong>
+
+                    <div className="jd-detail-actions">
+                        <span className={`jd-type-badge ${event.type}`}>
+                            {typeLabel[event.type]}
+                        </span>
+
+                        <Link
+                            to={event.url}
+                            className="jd-edit-event-btn"
+                            title="Edit event"
+                            aria-label="Edit event"
+                        >
+                            <Pencil size={20} />
+                        </Link>
+                    </div>
+                </div>
+
+                <p>{event.subtitle}</p>
+
+                {/* Change Job Status */}
+                {event.jobId && event.type !== 'interview' && (
+                    <div className="jd-status-change">
+                        <label
+                            className="form-label"
+                            htmlFor={`status-${event.id}`}
+                        >
+                            Status
+                        </label>
+
+                        <select
+                            id={`status-${event.id}`}
+                            className="form-control"
+                            value={details.status || 'Applied'}
+                            disabled={statusSaving}
+                            onChange={e =>
+                                onStatusChange(event.jobId, e.target.value)
+                            }
+                        >
+                            {STATUS_OPTIONS.map(option => (
+                                <option
+                                    key={option.value}
+                                    value={option.value}
+                                >
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+
+                        {statusSaving && (
+                            <small className="text-muted">
+                                Updating status...
+                            </small>
+                        )}
+
+                        {statusError && (
+                            <p className="form-error">
+                                ⚠ {statusError}
+                            </p>
+                        )}
+                    </div>
+                )}
+
+                <div className="jd-event-full-details">
+                    {fields.map(([label, key]) => {
+                        const value = details[key];
+
+                        if (
+                            value === null ||
+                            value === undefined ||
+                            value === ''
+                        ) {
+                            return null;
+                        }
+
+                        return (
+                            <div
+                                className="jd-event-detail-row"
+                                key={key}
+                            >
+                                <strong>{label}:</strong>
+                                <span>{String(value)}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {event.notes && (
+                    <p>
+                        <strong>Notes:</strong> {event.notes}
+                    </p>
+                )}
+
+            </div>
         </div>
-        <p>{event.subtitle}</p>
-        {event.time && <p>Time: {event.time}</p>}
-        {event.notes && <p>{event.notes}</p>}
-        <Link to={event.url}>View Details →</Link>
-      </div>
-    </div>
-  );
+    );
 }
+
+
 
 /* =========================================================
    Professional Job Tracker Calendar Page

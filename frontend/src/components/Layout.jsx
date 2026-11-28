@@ -23,6 +23,7 @@ const NAV_BOTTOM = [
 ];
 
 // Status Badge
+// Status Badge
 export function StatusBadge({ status }) {
     const map = {
         Wishlist: 'badge badge-wishlist',
@@ -34,7 +35,7 @@ export function StatusBadge({ status }) {
 
     return (
         <span className={map[status] || 'badge badge-wishlist'}>
-            {status}
+            {status === 'Wishlist' ? 'Saved Jobs' : status}
         </span>
     );
 }
