@@ -398,14 +398,51 @@ export default function Dashboard() {
         return events.filter(event => event.type === activeFilter)
     }, [events, activeFilter]);
 
-    // Upcoming events (interview & follow‑up) – next two future events
+
+
+
+    // Refresh upcoming events every minute
+    const [currentTime, setCurrentTime] = useState(() => new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 60000);
+
+        return () => clearInterval(timer);
+    }, []);
+
+    // Show only the next 3 upcoming interviews and follow-ups
     const upcomingEvents = useMemo(() => {
-        const todayKey = toDateKey(new Date());
-        const future = filteredEvents.filter(event =>
-            (event.type === 'interview' || event.type === 'followup') && event.date >= todayKey
-        );
-        return future.slice(0, 2);
-    }, [filteredEvents]);
+        const now = currentTime;
+
+        return events
+            .filter(event => {
+                if (
+                    event.type !== 'interview' &&
+                    event.type !== 'followup'
+                ) {
+                    return false;
+                }
+
+                const eventDateTime = new Date(
+                    `${event.date}T${event.time || '23:59:59'}`
+                );
+
+                return eventDateTime > now;
+            })
+            .sort((a, b) => {
+                const dateA = new Date(
+                    `${a.date}T${a.time || '23:59:59'}`
+                );
+                const dateB = new Date(
+                    `${b.date}T${b.time || '23:59:59'}`
+                );
+
+                return dateA - dateB;
+            })
+            .slice(0, 3);
+    }, [events, currentTime]);
 
     const selectedDateEvents = filteredEvents.filter(
         event => event.date === selectedDate
@@ -576,18 +613,36 @@ export default function Dashboard() {
                         </div>
                         <Link to="/calendar" className="jd-view-calendar">View Calendar →</Link>
                     </div>
-                    <div className="jd-summary-count">{upcomingEvents.length}</div>
+                    {/*<div className="jd-summary-count">{upcomingEvents.length}</div>*/}
                     <div className="jd-summary-label">Upcoming Events</div>
                     <hr className="jd-summary-divider" />
+
                     <div className="jd-upcoming-events">
-                        {upcomingEvents.map(event => (
-                            <div key={event.id} className="jd-upcoming-item">
-                                <span className={`jd-upcoming-dot ${event.type}`} />
-                                <span className="jd-upcoming-type">{event.type.charAt(0).toUpperCase() + event.type.slice(1)}</span>
-                                <span className="jd-upcoming-date">{formatDate(event.date)}</span>
+                        {upcomingEvents.length === 0 ? (
+                            <div className="jd-no-events">
+                                No upcoming events
                             </div>
-                        ))}
+                        ) : (
+                            upcomingEvents.map(event => (
+                                <div
+                                    key={event.id}
+                                    className="jd-upcoming-item"
+                                >
+                                    <span className={`jd-upcoming-dot ${event.type}`} />
+
+                                    <span className="jd-upcoming-type">
+                                        {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
+                                    </span>
+
+                                    <span className="jd-upcoming-date">
+                                        {formatDate(event.date)}
+                                    </span>
+                                </div>
+                            ))
+                        )}
                     </div>
+
+                       
                 </div>
             </div>
 

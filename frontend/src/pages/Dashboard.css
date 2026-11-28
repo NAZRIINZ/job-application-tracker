@@ -64,6 +64,152 @@
     margin-bottom: 24px;
 }
 
+/* Mobile – stack stats and calendar summary */
+@media (max-width: 480px) {
+    /* Stack stats and calendar summary in a single column */
+    .jd-stats-calendar-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .jd-main-grid {
+        grid-template-columns: 1fr;
+    }
+    .jd-calendar-summary-card {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+    .jd-dashboard-widgets-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .jd-stat-card {
+        padding: 12px 16px;
+    }
+    .jd-stat-info strong {
+        font-size: 24px;
+    }
+    .jd-summary-title svg {
+        width: 30px;
+        height: 30px;
+        padding: 6px;
+    }
+    .jd-summary-count {
+        font-size: 32px;
+    }
+    .jd-upcoming-item {
+        flex-wrap: wrap;
+        padding: 8px 10px;
+    }
+    .jd-upcoming-type {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .jd-upcoming-date {
+        margin-left: 0;
+        width: 100%;
+        text-align: right;
+    }
+
+    .jd-stats-calendar-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .jd-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    .jd-main-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .jd-dashboard-widgets-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .jd-stat-card {
+        padding: 12px 16px;
+    }
+    .jd-stat-info strong {
+        font-size: 24px;
+    }
+    .jd-summary-title svg {
+        width: 30px;
+        height: 30px;
+        padding: 6px;
+    }
+    .jd-summary-count {
+        font-size: 32px;
+    }
+    .jd-upcoming-item {
+        flex-wrap: wrap;
+        padding: 8px 10px;
+    }
+    .jd-upcoming-type {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .jd-upcoming-date {
+        margin-left: 0;
+        width: 100%;
+        text-align: right;
+    }
+}
+
+/* Tablet – adjust gaps and keep two‑column layout */
+@media (max-width: 768px) {
+    .jd-stats-calendar-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    .jd-calendar-summary-card {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+    .jd-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+    .jd-main-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .jd-dashboard-widgets-row {
+        flex-direction: column;
+        gap: 14px;
+    }
+    .jd-stat-card {
+        padding: 14px 18px;
+    }
+    .jd-summary-title svg {
+        width: 34px;
+        height: 34px;
+    }
+    .jd-summary-count {
+        font-size: 38px;
+    }
+    .jd-upcoming-item {
+        padding: 10px 12px;
+    }
+}
+
+/* Small laptop – keep desktop but slightly tighter */
+@media (max-width: 1024px) {
+    .jd-stats-calendar-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 22px;
+    }
+    .jd-main-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .jd-dashboard-widgets-row {
+        gap: 16px;
+    }
+}
+
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
 
 /* ========================================
    Modern Calendar Summary Card
@@ -891,7 +1037,7 @@
 /* Tablet */
 @media (max-width: 900px) {
     .jd-main-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .jd-details-card {
@@ -905,7 +1051,7 @@
 
 @media (max-width: 900px) {
     .jd-main-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .jd-details-card {
@@ -942,7 +1088,7 @@
     }
 
     .jd-list-event {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
         gap: 5px;
     }
 
@@ -1025,7 +1171,252 @@
 /* Tablet and mobile */
 @media (max-width: 900px) {
     .jd-dashboard-widgets-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+}
+
+/* Additional responsive tweaks – appended at end of file */
+
+/* Ensure text within upcoming items wraps and does not cause horizontal scroll */
+@media (max-width: 480px) {
+    /* Stack stats and calendar summary in a single column */
+    .jd-stats-calendar-grid {
         grid-template-columns: 1fr;
         gap: 16px;
+    }
+    .jd-main-grid {
+        grid-template-columns: 1fr;
+    }
+    .jd-calendar-summary-card {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+    .jd-dashboard-widgets-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .jd-stat-card {
+        padding: 12px 16px;
+    }
+    .jd-stat-info strong {
+        font-size: 24px;
+    }
+    .jd-summary-title svg {
+        width: 30px;
+        height: 30px;
+        padding: 6px;
+    }
+    .jd-summary-count {
+        font-size: 32px;
+    }
+    .jd-upcoming-item {
+        flex-wrap: wrap;
+        padding: 8px 10px;
+    }
+    .jd-upcoming-type {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .jd-upcoming-date {
+        margin-left: 0;
+        width: 100%;
+        text-align: right;
+    }
+
+    .jd-upcoming-type {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    .jd-upcoming-item {
+        min-width: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .jd-upcoming-type {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+}
+
+@media (max-width: 1024px) {
+    .jd-upcoming-type {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+}
+
+/* Mobile layout adjustments for Calendar Summary ordering */
+@media (max-width: 768px) {
+    .jd-calendar-summary-card {
+        grid-column: 1 / -1; /* Span full width of the grid */
+        width: 100%;
+    }
+    /* Ensure widgets stack vertically */
+    .jd-dashboard-widgets-row {
+        flex-direction: column;
+        gap: 14px;
+    }
+}
+
+/* Mobile (≤768px) – final overrides */
+@media (max-width: 768px) {
+    /* Stack stats and calendar summary vertically, full width */
+    .jd-stats-calendar-grid {
+        grid-template-columns: 1fr; /* full width */
+        gap: 20px;
+    }
+    .jd-calendar-summary-card {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+    /* Ensure stats grid stays 2‑column within its own container */
+    .jd-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+    /* Widgets already stack via existing rules; reinforce */
+    .jd-dashboard-widgets-row {
+        flex-direction: column;
+        gap: 14px;
+    }
+    /* Prevent horizontal scroll */
+    .jd-dashboard, .jd-stats-calendar-grid, .jd-main-grid {
+        overflow-x: hidden;
+    }
+}
+
+/* Mobile (≤768px) – full‑width layout and correct ordering */
+@media (max-width: 768px) {
+    /* Stack the stats + calendar section vertically */
+    .jd-stats-calendar-grid {
+        display: grid;
+        grid-template-columns: 1fr; /* full width for the container */
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+    /* Keep statistics cards in a 2‑column grid inside their own container */
+    .jd-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        width: 100%;
+    }
+    /* Ensure each stat card can shrink to fit the column */
+    .jd-stat-card {
+        min-width: 0;
+        width: 100%;
+        padding: 14px 18px;
+    }
+    /* Calendar Summary takes full width and appears after stats */
+    .jd-calendar-summary-card {
+        grid-column: 1 / -1;
+        width: 100%;
+        margin-bottom: 24px;
+    }
+    /* Main grid (stats+summary vs widgets) becomes single column */
+    .jd-main-grid {
+        grid-template-columns: 1fr;
+    }
+    /* Stack widgets vertically and make them full width */
+    .jd-dashboard-widgets-row {
+        flex-direction: column;
+        gap: 14px;
+    }
+    .jd-widget-progress,
+    .jd-widget-notifications {
+        width: 100%;
+    }
+    /* Prevent any horizontal overflow */
+    .jd-dashboard, .jd-stats-calendar-grid, .jd-main-grid {
+        overflow-x: hidden;
+    }
+}
+
+/* Tablet (769px–1024px) – slightly tighter but still full‑width sections */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .jd-stats-calendar-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 22px;
+    }
+    .jd-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+    .jd-calendar-summary-card {
+        width: 100%;
+    }
+    .jd-main-grid {
+        grid-template-columns: 1fr;
+    }
+    .jd-dashboard-widgets-row {
+        flex-direction: column;
+        gap: 16px;
+    }
+    .jd-widget-progress,
+    .jd-widget-notifications {
+        width: 100%;
+    }
+}
+
+/* ---------- Mobile responsiveness for Progress & Notifications cards ---------- */
+@media (max-width: 768px) {
+    /* Ensure widgets stack vertically in the order defined in JSX */
+    .jd-dashboard-widgets-row {
+        flex-direction: column; /* stack widgets */
+        gap: 16px;            /* space between the two cards */
+    }
+    /* Job Progress card – full width */
+    .jd-widget-progress {
+        width: 100% !important;
+        min-width: 0;
+        margin: 0;
+    }
+    /* Notifications card – full width and placed below progress */
+    .jd-widget-notifications {
+        width: 100% !important;
+        min-width: 0;
+        margin: 0;
+    }
+    /* Prevent any horizontal overflow caused by these widgets */
+    .jd-dashboard, .jd-main-grid {
+        overflow-x: hidden;
+    }
+}
+
+/* Ensure Job Progress and Notifications cards are full‑width on mobile */
+@media (max-width: 768px) {
+    .jd-widget-progress,
+    .jd-widget-notifications {
+        width: 100% !important;
+        min-width: 0;
+        margin: 0;
+        box-sizing: border-box;
+    }
+    /* Reinforce stacking order – already column via .jd-dashboard-widgets-row */
+    .jd-dashboard-widgets-row {
+        flex-direction: column;
+        gap: 16px;
+    }
+    .jd-dashboard, .jd-main-grid {
+        overflow-x: hidden;
+    }
+}
+/* Mobile: Job Progress and Notifications full-width layout */
+@media (max-width: 768px) {
+    .jd-dashboard-widgets-row {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 16px;
+    }
+
+    .jd-widget-progress,
+    .jd-widget-notifications {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        flex: 0 0 100%;
+        box-sizing: border-box;
     }
 }
