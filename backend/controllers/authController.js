@@ -375,9 +375,10 @@ async function changePassword(req, res) {
   }
 }
 
+
 // ============================================================
 // FORGOT PASSWORD - POST /api/auth/forgot-password
-// Generates reset token and sends email with reset link
+// Generates a secure reset token and sends email
 // ============================================================
 async function forgotPassword(req, res) {
   try {
@@ -422,7 +423,7 @@ async function forgotPassword(req, res) {
 
 // ============================================================
 // RESET PASSWORD - POST /api/auth/reset-password
-// Verifies token and sets new password
+// Verifies token and securely updates password
 // ============================================================
 async function resetPassword(req, res) {
   try {

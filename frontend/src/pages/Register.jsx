@@ -75,7 +75,7 @@ export default function Register() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-logo">🚀</div>
+              <div className="auth-logo">💼</div>
         <h1 className="auth-title">Create your account</h1>
         <p className="auth-subtitle">Start tracking your job applications today</p>
 

@@ -1,646 +1,323 @@
-# 💼 Job Application Tracker
-### A Full-Stack Web Application — Complete Beginner's Guide
+# JobTracker – Job Application Management System
 
----
+## 1. About the Project
 
-> **Built with:** React.js · Node.js · Express.js · Microsoft SQL Server  
-> **Difficulty:** Beginner-friendly  
-> **Purpose:** Portfolio project demonstrating full-stack web development
+JobTracker is a full-stack web application designed to help job seekers manage and track their job applications in one place.
 
----
+It provides a centralized platform where users can maintain company details, monitor application progress, schedule interviews, manage their profiles, and track their job-search activities through a dashboard.
 
-## 📚 Table of Contents
+The main goal of this application is to make the job-search process more organized and easier to manage.
 
-1. [Concepts Explained](#-concepts-explained-for-beginners)
-2. [Project Structure](#-project-structure)
-3. [Prerequisites & Installation](#-prerequisites--installation)
-4. [Database Setup](#-database-setup)
-5. [Backend Setup](#-backend-setup)
-6. [Frontend Setup](#-frontend-setup)
-7. [Running the App](#-running-the-app)
-8. [API Documentation](#-api-documentation)
-9. [Testing the App](#-testing-the-app)
-10. [Common Errors & Fixes](#-common-errors--fixes)
-11. [How the Code Works](#-how-the-code-works)
+## 2. Objectives
 
----
+- Simplify job application tracking.
+- Maintain all job-related information in one place.
+- Help users monitor application progress.
+- Organize upcoming and completed interviews.
+- Provide a clear overview of job-search activities.
+- Improve the overall job application management process.
 
-## 🧠 Concepts Explained for Beginners
+## 3. Features
 
-Before writing any code, let's understand the key concepts.
+### User Authentication
+- User Registration
+- Secure Login
+- JWT-based Authentication
+- Forgot Password
+- Password Reset through Email
+- Protected Routes
 
-### What is HTML?
-HTML (HyperText Markup Language) defines the **structure** of a web page.
-Think of it as the skeleton of a house — it tells the browser what elements exist.
-```html
-<h1>Hello World</h1>        <!-- Heading -->
-<p>This is a paragraph</p>  <!-- Paragraph -->
-<button>Click me</button>    <!-- Button -->
+### Job Application Management
+- Add new job applications.
+- View all saved applications.
+- Edit existing application details.
+- Delete job applications.
+- Search and filter applications.
+- Track application status.
+- Maintain company details, job titles, links, and notes.
+
+### Interview Management
+- Schedule interviews for saved job applications.
+- View upcoming and past interviews.
+- Edit interview details.
+- Delete interview schedules.
+- View interviews in a calendar.
+- Track interview dates, times, types, and results.
+
+### Dashboard
+- View job application statistics.
+- Monitor application progress.
+- View upcoming interviews.
+- Get an overview of job-search activities.
+
+### Profile Management
+- View and update user information.
+- Change account password.
+
+### Email Notifications
+- Welcome email after registration.
+- Password reset email.
+- Job application status update notifications.
+
+## 4. Technologies Used
+
+| Category | Technologies |
+|---|---|
+| Frontend | React.js, JavaScript, HTML5, CSS3 |
+| Build Tool | Vite |
+| Routing | React Router |
+| State Management | Context API |
+| Backend | Node.js, Express.js |
+| API Communication | REST API, Fetch API |
+| Authentication | JSON Web Token (JWT) |
+| Password Security | bcryptjs |
+| Database | MySQL |
+| Database Driver | mysql2 |
+| Email Service | Nodemailer |
+| Development Tools | Visual Studio Code, Postman, MySQL Workbench |
+| Version Control | Git, GitHub |
+
+## 5. Application Workflow
+
+The application follows a client-server architecture.
+
+1. The user registers or logs in through the React frontend.
+2. The frontend sends requests to the Express backend.
+3. The backend validates user information and communicates with the MySQL database.
+4. After successful authentication, a JWT token is returned to the frontend.
+5. The token is used to access protected APIs.
+6. Users can manage job applications and interview schedules.
+7. The dashboard displays relevant application information and statistics.
+
+### Architecture Overview
+
+```text
+             USER
+               |
+               v
+       REACT FRONTEND
+               |
+          REST API
+               |
+               v
+       NODE.JS + EXPRESS
+               |
+        +------+------+
+        |             |
+        v             v
+    MYSQL DB      NODEMAILER
+                      |
+                      v
+                 EMAIL SERVICE
 ```
 
-### What is CSS?
-CSS (Cascading Style Sheets) controls the **visual appearance** — colors, fonts, layout.
-Like interior decoration for the house:
-```css
-h1 { color: blue; font-size: 2rem; }
-button { background: green; color: white; padding: 10px; }
-```
+## 6. Project Structure
 
-### What is JavaScript?
-JavaScript adds **behavior** and **interactivity** to web pages.
-Like the electricity and plumbing — it makes things actually work:
-```javascript
-function greet() { alert("Hello!") }
-```
-
-### What is React?
-React is a JavaScript **library** for building user interfaces.
-Instead of manually updating HTML, you describe what the UI *should* look like,
-and React automatically updates the page when data changes.
-
-**Key React concepts:**
-- **Components**: Reusable pieces of UI (like building blocks)
-- **State (useState)**: Data that can change and triggers re-renders
-- **Effects (useEffect)**: Code that runs after a component renders
-- **Props**: Data passed from parent to child components
-
-### What is Node.js?
-Node.js lets you run JavaScript **outside the browser**, on a server.
-This means you can use JavaScript to write backend code.
-
-### What is Express.js?
-Express.js is a framework for Node.js that makes it easy to build web APIs.
-An API (Application Programming Interface) is a set of endpoints your frontend
-can call to get or save data.
-```javascript
-app.get('/api/jobs', (req, res) => {
-    res.json({ jobs: [...] }) // Send JSON data to frontend
-})
-```
-
-### What is SQL?
-SQL (Structured Query Language) is the language for talking to databases.
-```sql
-SELECT * FROM Jobs WHERE user_id = 1  -- Get all jobs for user 1
-INSERT INTO Jobs (company, title) VALUES ('Google', 'Engineer')
-```
-
-### What is SQL Server?
-Microsoft SQL Server is a **relational database** — it stores data in tables
-with rows and columns, like an advanced spreadsheet. Tables can be linked
-together using foreign keys.
-
-### What is an API?
-An API is how your frontend (React) talks to your backend (Node.js).
-The frontend sends HTTP requests (GET, POST, PUT, DELETE) and the backend
-returns JSON data as responses.
-
-```
-Browser (React)                     Server (Node.js)
-    │                                     │
-    │  GET /api/jobs                      │
-    │ ──────────────────────────────────> │
-    │                                     │ query SQL Server
-    │  { success: true, data: [...] }     │
-    │ <────────────────────────────────── │
-```
-
-### What is JWT?
-JWT (JSON Web Token) is how we handle login sessions.
-1. User logs in with email + password
-2. Server verifies credentials, creates a signed JWT token
-3. Frontend stores the token in localStorage
-4. Frontend sends token with every API request in the Authorization header
-5. Server verifies the token on each protected request
-
-### What is bcrypt?
-bcrypt is a password hashing algorithm. When a user sets a password,
-bcrypt scrambles it into an unreadable string. The original password
-can never be recovered from the hash.
-```
-password123 → $2b$10$rOzJqBkLzNEx...  (one-way, cannot be reversed)
-```
-
----
-
-## 📁 Project Structure
-
-```
-job-tracker/                    ← Root project folder
-├── database/
-│   ├── schema.sql             ← SQL to create tables
-│   └── seed.sql               ← Sample test data
+```text
+job-tracker/
 │
-├── backend/                   ← Node.js + Express server
+├── backend/
 │   ├── config/
-│   │   └── db.js              ← SQL Server connection
+│   │   ├── db.js
+│   │   └── email.js
+│   │
 │   ├── controllers/
-│   │   ├── authController.js  ← Login/register logic
-│   │   ├── jobsController.js  ← CRUD for job applications
+│   │   ├── authController.js
+│   │   ├── jobsController.js
 │   │   └── interviewsController.js
+│   │
 │   ├── middleware/
-│   │   └── auth.js            ← JWT verification middleware
+│   │   └── auth.js
+│   │
 │   ├── routes/
-│   │   ├── auth.js            ← /api/auth/* routes
-│   │   ├── jobs.js            ← /api/jobs/* routes
-│   │   └── interviews.js      ← /api/interviews/* routes
-│   ├── .env.example           ← Copy to .env and fill in values
-│   ├── server.js              ← Main Express server
+│   │   ├── authRoutes.js
+│   │   ├── jobs.js
+│   │   └── interviews.js
+│   │
+│   ├── services/
+│   │   └── emailService.js
+│   │
+│   ├── server.js
 │   └── package.json
 │
-└── frontend/                  ← React + Vite application
-    ├── src/
-    │   ├── context/
-    │   │   └── AuthContext.jsx   ← Global auth state
-    │   ├── components/
-    │   │   └── Layout.jsx        ← Sidebar, Navbar, shared UI
-    │   ├── pages/
-    │   │   ├── Home.jsx          ← Landing page
-    │   │   ├── Login.jsx         ← Login form
-    │   │   ├── Register.jsx      ← Registration form
-    │   │   ├── Dashboard.jsx     ← Stats overview
-    │   │   ├── JobList.jsx       ← All applications table
-    │   │   ├── AddJob.jsx        ← Add job form
-    │   │   ├── EditJob.jsx       ← Edit job form
-    │   │   ├── Interviews.jsx    ← Interview management
-    │   │   └── Profile.jsx       ← Profile settings
-    │   ├── App.jsx               ← Routes definition
-    │   ├── main.jsx              ← React entry point
-    │   └── index.css             ← All styles
-    ├── index.html
-    ├── vite.config.js
-    └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── pages/
+│   │   ├── api.js
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   │
+│   ├── index.html
+│   └── package.json
+│
+├── .env.example
+└── README.md
 ```
 
----
+*Note: The structure above shows the main project files. Update filenames and folders to match your actual repository.*
 
-## 🛠 Prerequisites & Installation
+## 7. Job Application Status
 
-### Step 1: Install Node.js
-1. Go to **https://nodejs.org**
-2. Download the **LTS** (Long Term Support) version
-3. Run the installer
-4. Verify installation:
-```powershell
-node --version   # Should show v18.x.x or higher
-npm --version    # Should show 9.x.x or higher
+JobTracker supports the following application statuses:
+
+| Status | Description |
+|---|---|
+| Wishlist | Jobs saved for future applications |
+| Applied | Applications already submitted |
+| Interview | Applications where an interview is scheduled or in progress |
+| Offer Received | Job offers received from companies |
+| Rejected | Applications rejected by companies |
+
+## 8. Database Overview
+
+The application uses MySQL to store user and job-related information.
+
+### Main Database Tables
+
+| Table | Purpose |
+|---|---|
+| Users | Stores user account and profile information |
+| JobApplications | Stores job application details |
+| Interviews | Stores interview schedules and results |
+| PasswordResetTokens | Stores password reset token information |
+
+### Database Relationships
+
+- One user can have multiple job applications.
+- One job application can have multiple interviews.
+- Each interview is associated with a job application and user.
+- Password reset tokens are associated with user accounts.
+
+## 9. Security Implementation
+
+The application includes the following security measures:
+
+- Password hashing using bcryptjs.
+- JWT-based user authentication.
+- Protected frontend routes.
+- Backend authentication middleware.
+- Parameterized SQL queries to help prevent SQL injection.
+- User-specific data access through authenticated user IDs.
+- Password reset tokens with expiration and usage checks.
+- Environment variables for sensitive configuration.
+
+## 10. Prerequisites
+
+Install the following before running the application:
+
+- Node.js
+- npm
+- MySQL Server
+- MySQL Workbench (optional)
+- Visual Studio Code (optional)
+- Git (optional)
+
+## 11. Installation and Setup
+
+### Step 1: Clone the Repository
+
+```bash
+git clone YOUR_GITHUB_REPOSITORY_URL
+cd job-tracker
 ```
 
-### Step 2: Install SQL Server
-Download **SQL Server Express** (free) from:
-https://www.microsoft.com/en-us/sql-server/sql-server-downloads
+### Step 2: Backend Setup
 
-Choose "Express" (free edition). During installation:
-- Choose "Basic" installation type
-- Note the instance name (usually `SQLEXPRESS`)
-- Note the connection string shown at the end
-
-### Step 3: Install SQL Server Management Studio (SSMS)
-Download from: https://aka.ms/ssmsfullsetup
-
-SSMS is a graphical tool for managing SQL Server databases.
-
-### Step 4: Install Git (optional but recommended)
-https://git-scm.com/download/win
-
----
-
-## 🗄 Database Setup
-
-### Step 1: Open SSMS
-1. Open **SQL Server Management Studio**
-2. In the "Connect to Server" dialog:
-   - Server type: Database Engine
-   - Server name: `localhost\SQLEXPRESS` (or `.\SQLEXPRESS`)
-   - Authentication: Windows Authentication (or SQL Server Authentication)
-3. Click **Connect**
-
-### Step 2: Create the Database and Tables
-1. Click **File → Open → File** (or press Ctrl+O)
-2. Navigate to `C:\Work\job-tracker\database\schema.sql`
-3. Open the file
-4. Press **F5** or click **Execute** (green play button)
-5. You should see: `✅ Schema setup complete! Tables: Users, JobApplications, Interviews`
-
-### Step 3: Load Sample Data (Optional but recommended)
-1. Open `C:\Work\job-tracker\database\seed.sql` in SSMS
-2. Press **F5** to execute
-3. You'll see: `Test Login: Email = test@example.com | Password = password123`
-
-### Step 4: Enable TCP/IP (Required for Node.js to connect)
-1. Open **SQL Server Configuration Manager**
-   (Search in Windows: "SQL Server Configuration Manager")
-2. Expand **SQL Server Network Configuration**
-3. Click **Protocols for SQLEXPRESS**
-4. Right-click **TCP/IP** → **Enable**
-5. Restart SQL Server service:
-   - Go to **SQL Server Services**
-   - Right-click **SQL Server (SQLEXPRESS)** → **Restart**
-
-### Step 5: Create SQL Server Login (if NOT using Windows Auth)
-In SSMS, run this SQL (replace with your own username/password):
-```sql
-USE master;
-CREATE LOGIN jobtracker_user WITH PASSWORD = 'YourStrongPassword123!';
-USE JobTracker;
-CREATE USER jobtracker_user FOR LOGIN jobtracker_user;
-ALTER ROLE db_owner ADD MEMBER jobtracker_user;
-```
-
----
-
-## ⚙️ Backend Setup
-
-### Step 1: Create the .env file
-```powershell
-# Navigate to backend folder
-cd C:\Work\job-tracker\backend
-
-# Copy the example file
-copy .env.example .env
-```
-
-Now open `.env` in a text editor and fill in your values:
-```env
-PORT=5000
-JWT_SECRET=my_super_secret_key_change_this_please_123456
-JWT_EXPIRES_IN=7d
-
-# For SQL Server Express with Windows Authentication:
-DB_SERVER=localhost\SQLEXPRESS
-DB_DATABASE=JobTracker
-DB_TRUSTED_CONNECTION=true
-
-# For SQL Server Authentication (username/password):
-# DB_SERVER=localhost\SQLEXPRESS
-# DB_DATABASE=JobTracker
-# DB_USER=jobtracker_user
-# DB_PASSWORD=YourStrongPassword123!
-# DB_TRUSTED_CONNECTION=false
-```
-
-### Step 2: Install Node.js packages
-```powershell
-cd C:\Work\job-tracker\backend
-npm install
-```
-This installs all packages listed in `package.json`:
-- `express` — web framework
-- `mssql` — SQL Server driver
-- `bcryptjs` — password hashing
-- `jsonwebtoken` — JWT creation/verification
-- `cors` — allow cross-origin requests
-- `dotenv` — load .env file
-- `nodemon` — auto-restart server on code changes (dev only)
-
-### Step 3: Test the backend connection
-```powershell
-npm run dev
-```
-You should see:
-```
-✅ Connected to SQL Server successfully!
-   Server:   localhost\SQLEXPRESS
-   Database: JobTracker
-====================================
-🚀 Server running on port 5000
-📡 API URL: http://localhost:5000
-====================================
-```
-
-If you see errors, check the [Common Errors](#-common-errors--fixes) section.
-
----
-
-## 🎨 Frontend Setup
-
-### Step 1: Install Node.js packages
-```powershell
-# Open a NEW terminal window (keep backend terminal running!)
-cd C:\Work\job-tracker\frontend
+```bash
+cd backend
 npm install
 ```
 
-### Step 2: Start the frontend dev server
-```powershell
+Create a `.env` file inside the backend folder and configure the required database, JWT, frontend, and email settings.
+
+### Step 3: Frontend Setup
+
+Open a new terminal:
+
+```bash
+cd frontend
+npm install
+```
+
+### Step 4: Database Setup
+
+1. Open MySQL Workbench.
+2. Create the project database.
+3. Execute the SQL schema file.
+4. Verify that the required tables are created.
+5. Configure the database connection in the backend environment file.
+
+## 12. Running the Application
+
+### Start the Backend
+
+```bash
+cd backend
 npm run dev
 ```
-You should see:
-```
-  VITE v5.x.x ready in XXX ms
 
-  ➜  Local:   http://localhost:5173/
-  ➜  Network: use --host to expose
-```
+### Start the Frontend
 
----
+Open another terminal:
 
-## 🚀 Running the App
-
-You need **two terminal windows** running simultaneously:
-
-**Terminal 1 — Backend:**
-```powershell
-cd C:\Work\job-tracker\backend
+```bash
+cd frontend
 npm run dev
 ```
 
-**Terminal 2 — Frontend:**
-```powershell
-cd C:\Work\job-tracker\frontend
-npm run dev
+Open the frontend URL displayed in the terminal, usually:
+
+```text
+http://localhost:5173
 ```
 
-Then open your browser: **http://localhost:5173**
+## 13. API Endpoints
 
-### First Time Setup
-1. Click **"Create Free Account"**
-2. Register with any name/email/password
-3. You'll be automatically logged in and redirected to the Dashboard
+### Authentication APIs
 
-### Using the Demo Account
-Email: `test@example.com` | Password: `password123`
-(Only works if you ran seed.sql)
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/register` | Register a new user |
+| POST | `/api/auth/login` | User login |
+| POST | `/api/auth/forgot-password` | Request password reset |
+| POST | `/api/auth/reset-password` | Reset password |
+| GET | `/api/auth/me` | Get current user |
+| PUT | `/api/auth/profile` | Update profile |
+| PUT | `/api/auth/password` | Change password |
+
+### Job Application APIs
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/jobs` | Get all job applications |
+| GET | `/api/jobs/:id` | Get a specific job |
+| POST | `/api/jobs` | Add a new job |
+| PUT | `/api/jobs/:id` | Update a job |
+| DELETE | `/api/jobs/:id` | Delete a job |
+
+### Interview APIs
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/interviews` | Get all interviews |
+| POST | `/api/interviews` | Schedule an interview |
+| PUT | `/api/interviews/:id` | Update an interview |
+| DELETE | `/api/interviews/:id` | Delete an interview |
+
+
+
+## 14. Author
+
+**Fathima Nazrin**
+
+**Project Name:** JobTracker
+
+**Project Type:** Full-Stack Web Application
+
+**Domain:** Job Application Management
 
 ---
 
-## 📡 API Documentation
-
-All API responses have this format:
-```json
-{ "success": true/false, "message": "...", "data": {...} }
-```
-
-### Authentication Endpoints
-
-#### POST /api/auth/register
-Register a new user.
-```json
-Request body:
-{ "name": "Alex", "email": "alex@example.com", "password": "secret123" }
-
-Response (201):
-{ "success": true, "token": "eyJ...", "user": { "id": 1, "name": "Alex", "email": "..." } }
-```
-
-#### POST /api/auth/login
-```json
-Request body:
-{ "email": "alex@example.com", "password": "secret123" }
-
-Response (200):
-{ "success": true, "token": "eyJ...", "user": { "id": 1, "name": "Alex", "email": "..." } }
-```
-
-#### GET /api/auth/me
-Get current user. Requires `Authorization: Bearer <token>` header.
-
-#### PUT /api/auth/profile
-Update name and email. Requires auth.
-
-#### PUT /api/auth/password
-Change password. Requires auth.
-```json
-{ "currentPassword": "old", "newPassword": "newpass" }
-```
-
-### Job Application Endpoints (All require auth)
-
-#### GET /api/jobs
-Get all jobs with optional filters.
-```
-Query parameters:
-  ?search=google      → filter by company/title/location
-  ?status=Applied     → filter by status
-  ?page=2&limit=10    → pagination
-  ?sortBy=company_name&sortDir=asc
-```
-
-#### POST /api/jobs
-Create new job application.
-```json
-{
-  "company_name": "Google",
-  "job_title": "Software Engineer",
-  "location": "Mountain View, CA",
-  "salary": "$120,000 - $180,000",
-  "application_date": "2024-01-15",
-  "status": "Applied",
-  "job_link": "https://careers.google.com/job/123",
-  "notes": "Applied through LinkedIn",
-  "follow_up_date": "2024-01-29"
-}
-```
-
-#### GET /api/jobs/:id — Get single job
-#### PUT /api/jobs/:id — Update job (same body as POST)
-#### DELETE /api/jobs/:id — Delete job
-#### GET /api/jobs/stats — Dashboard statistics
-
-### Interview Endpoints (All require auth)
-
-#### GET /api/interviews — Get all interviews
-#### POST /api/interviews
-```json
-{
-  "job_id": 1,
-  "interview_date": "2024-01-20",
-  "interview_time": "14:00",
-  "interview_type": "Technical",
-  "notes": "LeetCode prep needed",
-  "result": "Scheduled"
-}
-```
-#### PUT /api/interviews/:id — Update interview
-#### DELETE /api/interviews/:id — Delete interview
-
----
-
-## 🧪 Testing the App
-
-### Manual Testing Checklist
-1. ✅ Register a new account
-2. ✅ Log in with the demo account
-3. ✅ View the dashboard stats
-4. ✅ Add 3 new job applications with different statuses
-5. ✅ Search for a company by name
-6. ✅ Filter by status "Applied"
-7. ✅ Edit a job's status to "Interview"
-8. ✅ Schedule an interview for that job
-9. ✅ Delete an application
-10. ✅ Update your profile name
-11. ✅ Change your password
-12. ✅ Log out and log back in
-13. ✅ Try accessing /dashboard without logging in → redirected to /login
-
-### Testing the API with curl (optional)
-```powershell
-# Register
-curl -X POST http://localhost:5000/api/auth/register `
-  -H "Content-Type: application/json" `
-  -d '{"name":"Test","email":"t@test.com","password":"pass123"}'
-
-# Login
-curl -X POST http://localhost:5000/api/auth/login `
-  -H "Content-Type: application/json" `
-  -d '{"email":"test@example.com","password":"password123"}'
-
-# Get jobs (replace TOKEN with the token from login)
-curl http://localhost:5000/api/jobs `
-  -H "Authorization: Bearer TOKEN"
-```
-
----
-
-## 🐛 Common Errors & Fixes
-
-### ❌ "Cannot connect to SQL Server"
-**Cause:** SQL Server is not running or TCP/IP is not enabled.
-**Fix:**
-1. Open Services (Windows key → "Services")
-2. Find "SQL Server (SQLEXPRESS)" → right-click → Start
-3. Enable TCP/IP in SQL Server Configuration Manager (see Step 4 of DB setup)
-4. Check your .env DB_SERVER value matches your SQL Server instance name
-
-### ❌ "Login failed for user"
-**Cause:** Wrong username/password in .env file, or user doesn't have permission.
-**Fix:**
-1. Double-check DB_USER and DB_PASSWORD in .env
-2. Try using Windows Authentication: set DB_TRUSTED_CONNECTION=true
-
-### ❌ "Port 5000 already in use"
-**Cause:** Another program is using port 5000.
-**Fix:**
-```powershell
-# Find what's using the port
-netstat -ano | findstr :5000
-# Kill that process by PID
-taskkill /PID <PID> /F
-```
-Or change PORT in .env to 5001.
-
-### ❌ "CORS error" in browser console
-**Cause:** Frontend port doesn't match the allowed origins in server.js.
-**Fix:** Add your frontend port to the cors origin array in `server.js`.
-
-### ❌ "jwt malformed" or "invalid token"
-**Cause:** The JWT_SECRET in .env changed after you logged in.
-**Fix:** Log out and log back in. The old token is no longer valid.
-
-### ❌ React page is blank / "white screen"
-**Cause:** JavaScript error in a React component.
-**Fix:** Open browser developer tools (F12) → Console tab → read the error message.
-
-### ❌ "Module not found" in Node.js
-**Cause:** Missing npm package.
-**Fix:** Run `npm install` in the `backend` folder.
-
-### ❌ npm install fails
-**Cause:** Node version too old or network issues.
-**Fix:** Update Node.js to LTS version from nodejs.org
-
----
-
-## 💡 How the Code Works
-
-### Request Flow (Trace a request from click to database)
-
-When you click "Add Job" and submit the form:
-
-```
-1. User clicks "Save Application" in AddJob.jsx
-2. React calls handleSubmit() function
-3. fetch('/api/jobs', { method: 'POST', body: JSON.stringify(form) })
-   └── Vite proxy forwards to http://localhost:5000/api/jobs
-4. Express receives the POST request in server.js
-5. Request matches: app.use('/api/jobs', jobsRoutes)
-6. Router matches: router.post('/', authMiddleware, createJob)
-7. authMiddleware runs first:
-   └── Reads 'Authorization: Bearer eyJ...' header
-   └── jwt.verify() decodes the token
-   └── Sets req.user = { id: 5, name: 'Alex', email: '...' }
-8. createJob controller runs:
-   └── Reads req.body (company_name, job_title, etc.)
-   └── Validates required fields
-   └── const pool = getPool()
-   └── pool.request().input('userId', sql.Int, req.user.id).query(...)
-   └── SQL Server inserts the row
-9. Controller sends: res.status(201).json({ success: true, data: newJob })
-10. React receives the response
-11. setSuccess('Application added successfully!')
-12. setTimeout(() => navigate('/jobs'), 1200) → redirect to job list
-```
-
-### Authentication Flow
-
-```
-REGISTRATION:
-User fills form → POST /api/auth/register
-→ Validate inputs
-→ Check email not already used
-→ bcrypt.hash(password, 10)     ← One-way hash
-→ INSERT INTO Users (name, email, hashedPassword)
-→ jwt.sign({ id, email, name }, JWT_SECRET, { expiresIn: '7d' })
-→ Return { token, user }
-→ Frontend: localStorage.setItem('token', token)
-→ AuthContext: setUser(userData)
-→ Navigate to /dashboard
-
-EVERY SUBSEQUENT REQUEST:
-fetch('/api/jobs', {
-  headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-})
-→ authMiddleware runs
-→ jwt.verify(token, JWT_SECRET) ← Verifies & decodes
-→ req.user = { id: 5, email: '...' }
-→ Route handler uses req.user.id to only access that user's data
-```
-
-### Why Parameterized Queries?
-This is WRONG (SQL injection vulnerable!):
-```javascript
-// ❌ BAD - Never do this!
-const query = `SELECT * FROM Users WHERE email = '${email}'`
-// Attacker enters: ' OR '1'='1' -- 
-// This becomes: SELECT * FROM Users WHERE email = '' OR '1'='1' --'
-// Which returns ALL users!
-```
-
-This is RIGHT (parameterized):
-```javascript
-// ✅ GOOD - Always use this!
-pool.request()
-  .input('email', sql.NVarChar, email)
-  .query("SELECT * FROM Users WHERE email = @email")
-// mssql automatically escapes the value - injection impossible!
-```
-
----
-
-## 🚀 Next Steps (After you're comfortable)
-
-1. **Add CSV export** — download job applications as a spreadsheet
-2. **Add email notifications** — using NodeMailer for follow-up reminders
-3. **Improve security** — move JWT to HttpOnly cookies
-4. **Add testing** — Jest for backend, React Testing Library for frontend
-5. **Deploy online**:
-   - Backend: Railway, Render, or Heroku
-   - Frontend: Vercel or Netlify
-   - Database: Azure SQL (free tier)
-6. **Add more features** — salary negotiation tracker, resume versions, cover letters
-
----
-
-## 📖 Learning Resources
-
-- **React Docs**: https://react.dev (official, beginner-friendly)
-- **Node.js Docs**: https://nodejs.org/docs
-- **Express.js Guide**: https://expressjs.com/guide
-- **SQL Server Tutorial**: https://www.w3schools.com/sql
-- **mssql Package**: https://www.npmjs.com/package/mssql
-- **JWT.io**: https://jwt.io (visualize JWT tokens)
-- **bcrypt explanation**: https://auth0.com/blog/hashing-passwords-one-way-road-to-security
-
----
-
-*Built as a beginner portfolio project. Happy coding! 🎉*
+*JobTracker – Organize your job search, track your progress, and manage your career opportunities in one place.*

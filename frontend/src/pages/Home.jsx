@@ -42,7 +42,7 @@ export default function Home() {
         </p>
         <div className="hero-buttons">
           <Link to="/register" className="btn btn-white btn-lg">
-            🚀 Start Tracking Free
+            Start Tracking Free
           </Link>
           <Link to="/login" className="btn btn-ghost btn-lg">
             Sign In →
@@ -91,8 +91,10 @@ export default function Home() {
         padding: '24px',
         fontSize: '0.875rem'
       }}>
-        <p>Built with React, Node.js, Express & SQL Server</p>
-        <p style={{ marginTop: '4px' }}>A portfolio project for beginners</p>
+              <p>Powered by React, Node.js, Express & MySQL</p>
+              <p style={{ marginTop: '4px' }}>
+                  Simplifying your job search, one application at a time.
+              </p>
       </footer>
     </div>
   )
